@@ -447,16 +447,19 @@ def report():
                     else:  # OR logic
                         filtered_df = pd.concat([filtered_df, df[mask]]).drop_duplicates()
             
+            # Store the filtered dataframe in session state
+            st.session_state.filtered_df = filtered_df
             st.write("Filtered Dataframe:")
-            st.dataframe(filtered_df)
-            
-            # Option to save the filtered dataframe
+            st.dataframe(st.session_state.filtered_df)
+
+        # Option to save the filtered dataframe
+        if 'filtered_df' in st.session_state:
             save_name = st.text_input("Enter a name to save this filtered result:")
             if st.button("Save Filtered Result", key="save_filters"):
                 if save_name:
                     if 'saved_results' not in st.session_state:
                         st.session_state.saved_results = {}
-                    st.session_state.saved_results[save_name] = filtered_df
+                    st.session_state.saved_results[save_name] = st.session_state.filtered_df
                     st.success(f"Filtered result saved as '{save_name}'")
                 else:
                     st.warning("Please enter a name to save the filtered result.")
