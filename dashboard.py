@@ -375,7 +375,7 @@ def report():
             st.dataframe(result)
 
             # Save result functionality
-            save_name = st.text_input("Enter a name to save this result table:")
+            save_name = st.text_input("Enter a name to save this result TABLE:")
             if st.button("Save Result"):
                 if save_name:
                     if 'saved_results' not in st.session_state:
