@@ -19,6 +19,9 @@ st.markdown("<h6 style='text-align: center;'><i>Your Data Analysis Assistant</i>
 if "section_selection" not in st.session_state:
     st.session_state.section_selection = "Upload Dataset"
 
+if "uploaded_file" not in st.session_state:
+    st.session_state.uploaded_file = None
+
 if 'df' not in st.session_state:
     st.session_state.df = pd.DataFrame()
 
@@ -26,14 +29,16 @@ if 'new_columns' not in st.session_state:
     st.session_state.new_columns = []
 
 if 'original_columns' not in st.session_state:
- st.session_state.original_columns = st.session_state.df.columns.tolist()
+ st.session_state.original_columns = st.session_state.df.columns.tolist() if not st.session_state.df.empty else []
+
 
 if 'columns_to_delete' not in st.session_state:
  st.session_state.columns_to_delete = []
 
 # backup of session
 def backup_df():
-    st.session_state.df_backup = st.session_state.df.copy()
+    if 'df_backup' not in st.session_state or not st.session_state.df_backup.equals(st.session_state.df):
+        st.session_state.df_backup = st.session_state.df.copy()
 
 def restore_backup():
     if 'df_backup' in st.session_state:
@@ -44,9 +49,6 @@ def restore_backup():
 # functions
 
 def summary():
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h6 style='text-align: center;background-color: gray;'>Summary of dataset:</h6>",
-                unsafe_allow_html=True)
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
         ["Shape", "Data Types", "Numerical Data", "Non-Numerical Data", "Missing Values", "Duplicated Rows"])
 
@@ -80,9 +82,6 @@ def summary():
         st.write(f"There are {df_duplicated} duplicated rows.")
 
 def fix():
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h6 style='text-align: center;background-color: gray;'>Fix dataset issues:</h6>",
-                unsafe_allow_html=True)
     tab1, tab2, tab3 = st.tabs(
         ["Convert Data Types", "Handle Missing Values", "Drop Duplicated Rows"])
 
@@ -107,7 +106,10 @@ def fix():
              if new_type == "string":
                  st.session_state.df[column_to_convert] = st.session_state.df[column_to_convert].astype(str)
              elif new_type == "datetime":
-                 st.session_state.df[column_to_convert] = pd.to_datetime(st.session_state.df[column_to_convert], format=date_format)
+                 if date_format.lower() == 'mixed':
+                    st.session_state.df[column_to_convert] = pd.to_datetime(st.session_state.df[column_to_convert], errors='coerce')
+                 else:
+                    st.session_state.df[column_to_convert] = pd.to_datetime(st.session_state.df[column_to_convert], format=date_format)
              elif new_type == "integer":
                  st.session_state.df[column_to_convert] = st.session_state.df[column_to_convert].astype(int)
              elif new_type == "float":
@@ -210,8 +212,6 @@ def fix():
 
 def new_columns():
     restore_backup()
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h6 style='text-align: center;background-color: gray;'>New Columns:</h6>", unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["Add New Columns", "Delete Columns"])
 
@@ -276,9 +276,7 @@ def new_columns():
 
 def export():
     restore_backup()
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h6 style='text-align: center;background-color: gray;'>Export Updated Dataset:</h6>", unsafe_allow_html=True)
-    
+
     # Ensure the dataframe is not empty
     if 'df' in st.session_state and not st.session_state.df.empty:
         # Check if uploaded_file exists in session state
@@ -304,19 +302,27 @@ def export():
 
 def upload_dataset():
 
- uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+    # File uploader widget
+    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 
- if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
-        st.session_state.df = df
-        st.session_state.uploaded_file = uploaded_file
-
-        # Reset other session variables when a new file is uploaded
-        st.session_state.new_columns = []  # Reset new columns
-        st.session_state.columns_to_delete = []  # Reset columns to delete
-        st.session_state.original_columns = df.columns.tolist()  # Reset original columns
-        st.write(df.head())
-        backup_df()
+    if uploaded_file is not None:
+        try:
+            # Load the uploaded file into a DataFrame
+            st.session_state.df = pd.read_csv(uploaded_file)
+            st.session_state.uploaded_file = uploaded_file.name  # Save the file name in session state
+            st.session_state.original_columns = st.session_state.df.columns.tolist()
+            backup_df()  # Save a backup of the dataset
+            st.success(f"Dataset '{uploaded_file.name}' uploaded successfully!")
+            st.write(st.session_state.df.head())  # Display the first few rows of the DataFrame
+        except Exception as e:
+            st.error(f"An error occurred while loading the dataset: {str(e)}")
+    else:
+        if st.session_state.df.empty:
+            st.info("Please upload a dataset to proceed.")
+        else:
+            # Display existing dataset if already uploaded
+            st.success(f"Using previously uploaded dataset: {st.session_state.uploaded_file}")
+            st.write(st.session_state.df.head())
 
 
 # sections
