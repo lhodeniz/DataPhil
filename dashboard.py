@@ -331,7 +331,7 @@ def upload_dataset():
 
 
 def report():
-     tab1, tab2, tab3 = st.tabs(["Tables", "Views", "Dashboard"])
+     tab1, tab2, tab3 = st.tabs(["Tables", "Filters", "Dashboard"])
  
      with tab1:    
         restore_backup()
@@ -353,13 +353,13 @@ def report():
         with col2:
             agg_function = st.selectbox("Select function:", agg_functions)
         with col3:
-            if st.button("Add Aggregation"):
+            if st.button("Add Aggregation", key="add_aggregation_tables"):
                 st.session_state.agg_list.append((agg_column, agg_function))
 
         # Display and allow removal of selected aggregations
         for i, (col, func) in enumerate(st.session_state.agg_list):
             st.write(f"{i+1}. {col} - {func}")
-            if st.button(f"Remove {i+1}"):
+            if st.button(f"Remove {i+1}", key=f"remove_aggregated{i+1}"):
                 st.session_state.agg_list.pop(i)
                 st.rerun()
 
@@ -376,7 +376,7 @@ def report():
 
             # Save result functionality
             save_name = st.text_input("Enter a name to save this result TABLE:")
-            if st.button("Save Result"):
+            if st.button("Save Result", key="save_results_tables"):
                 if save_name:
                     if 'saved_results' not in st.session_state:
                         st.session_state.saved_results = {}
@@ -394,7 +394,78 @@ def report():
             st.write("Please select grouping columns and add at least one aggregation.")
      
      with tab2:
-        st.write("views")
+        restore_backup()
+        # Step 1: Select dataframe
+        dataframe_options = ["Original Dataframe"] + list(st.session_state.get('saved_results', {}).keys())
+        selected_df_name = st.selectbox("Select a dataframe:", dataframe_options)
+        
+        if selected_df_name == "Original Dataframe":
+            df = st.session_state.df
+        else:
+            df = st.session_state.saved_results[selected_df_name]
+        
+        # Step 2: Add filter conditions
+        st.write("Add filter conditions:")
+        if 'filter_conditions' not in st.session_state:
+            st.session_state.filter_conditions = []
+        
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col1:
+            column = st.selectbox("Select column:", df.columns, key="filter_column")
+        with col2:
+            operator = st.selectbox("Select operator:", ["==", "!=", ">", "<", ">=", "<=", "contains"], key="filter_operator")
+        with col3:
+            value = st.text_input("Enter value:", key="filter_value")
+        with col4:
+            logic = st.selectbox("Logic:", ["AND", "OR"], key="filter_logic")
+        with col5:
+            if st.button("Add Condition", key="add_condition_filters"):
+                st.session_state.filter_conditions.append((column, operator, value, logic))
+                st.rerun()
+        
+        # Display and allow removal of filter conditions
+        for i, (col, op, val, log) in enumerate(st.session_state.filter_conditions):
+            st.write(f"{i+1}. {col} {op} {val} {log}")
+            if st.button(f"Remove {i+1}", key=f"remove_condition{i+1}"):
+                st.session_state.filter_conditions.pop(i)
+                st.rerun()
+        
+        # Step 3: Apply filters
+        if st.button("Apply Filters", key="apply_filters"):
+            filtered_df = df.copy()
+            if st.session_state.filter_conditions:
+                for i, (col, op, val, log) in enumerate(st.session_state.filter_conditions):
+                    if op == "contains":
+                        mask = filtered_df[col].astype(str).str.contains(val, case=False)
+                    else:
+                        mask = eval(f"filtered_df['{col}'] {op} {val}")
+                    
+                    if i == 0:  # First condition
+                        filtered_df = filtered_df[mask]
+                    elif log == "AND":
+                        filtered_df = filtered_df[mask]
+                    else:  # OR logic
+                        filtered_df = pd.concat([filtered_df, df[mask]]).drop_duplicates()
+            
+            st.write("Filtered Dataframe:")
+            st.dataframe(filtered_df)
+            
+            # Option to save the filtered dataframe
+            save_name = st.text_input("Enter a name to save this filtered result:")
+            if st.button("Save Filtered Result", key="save_filters"):
+                if save_name:
+                    if 'saved_results' not in st.session_state:
+                        st.session_state.saved_results = {}
+                    st.session_state.saved_results[save_name] = filtered_df
+                    st.success(f"Filtered result saved as '{save_name}'")
+                else:
+                    st.warning("Please enter a name to save the filtered result.")
+
+        # Display saved results
+        if 'saved_results' in st.session_state and st.session_state.saved_results:
+            st.write("Saved Results:")
+            for name in st.session_state.saved_results.keys():
+                st.write(f"- {name}")
 
      with tab3:
         st.write("dashboard")
