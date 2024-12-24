@@ -53,7 +53,7 @@ def summary():
     if st.session_state.df.empty:
         st.warning("No dataset uploaded. Please upload a dataset to view the summary.")
         return  # Exit the function if no data is present
-        
+
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
         ["Shape", "Data Types", "Numerical Data", "Non-Numerical Data", "Missing Values", "Duplicated Rows"])
 
@@ -288,7 +288,7 @@ def export():
         if 'uploaded_file' in st.session_state:
             uploaded_file = st.session_state.uploaded_file
             # Generate the updated file name
-            file_name = "updated_" + uploaded_file.name  # Adding _updated to the original filename
+            file_name = "updated_" + uploaded_file  # Adding _updated to the original filename
             file_name = file_name.replace(".csv", "_updated.csv")  # Ensure it has the .csv extension
             
             # Convert DataFrame to CSV and offer it for download
