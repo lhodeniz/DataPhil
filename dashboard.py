@@ -331,65 +331,73 @@ def upload_dataset():
 
 
 def report():
-    restore_backup()
-    
-    # Let user select columns for grouping
-    group_columns = st.multiselect("Select columns to group by:", st.session_state.df.columns)
-
-    # Define available aggregation functions
-    agg_functions = ["mean", "sum", "count", "min", "max", "median", "std", "var", "mode", "nunique", "quantile"]
-
-    # Create a list to store aggregation selections
-    if 'agg_list' not in st.session_state:
-        st.session_state.agg_list = []
-
-    # Let user add multiple aggregations
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        agg_column = st.selectbox("Select column:", st.session_state.df.columns)
-    with col2:
-        agg_function = st.selectbox("Select function:", agg_functions)
-    with col3:
-        if st.button("Add Aggregation"):
-            st.session_state.agg_list.append((agg_column, agg_function))
-
-    # Display and allow removal of selected aggregations
-    for i, (col, func) in enumerate(st.session_state.agg_list):
-        st.write(f"{i+1}. {col} - {func}")
-        if st.button(f"Remove {i+1}"):
-            st.session_state.agg_list.pop(i)
-            st.rerun()
-
-    if group_columns and st.session_state.agg_list:
-        # Create a dictionary for aggregation
-        agg_dict = {f"{col}_{func}_{i}": (col, func) for i, (col, func) in enumerate(st.session_state.agg_list)}
+     tab1, tab2, tab3 = st.tabs(["Tables", "Views", "Dashboard"])
+ 
+     with tab1:    
+        restore_backup()
         
-        # Perform groupby and aggregation
-        result = st.session_state.df.groupby(group_columns).agg(**agg_dict).reset_index()
-        
-        # Display the result
-        st.write("Aggregated Report:")
-        st.dataframe(result)
+        # Let user select columns for grouping
+        group_columns = st.multiselect("Select columns to group by:", st.session_state.df.columns)
 
-        # Save result functionality
-        save_name = st.text_input("Enter a name to save this result table:")
-        if st.button("Save Result"):
-            if save_name:
-                if 'saved_results' not in st.session_state:
-                    st.session_state.saved_results = {}
-                st.session_state.saved_results[save_name] = result
-                st.success(f"Result saved as '{save_name}'")
-            else:
-                st.warning("Please enter a name to save the result.")
+        # Define available aggregation functions
+        agg_functions = ["mean", "sum", "count", "min", "max", "median", "std", "var", "mode", "nunique", "quantile"]
 
-        # Display saved results
-        if 'saved_results' in st.session_state and st.session_state.saved_results:
-            st.write("Saved Results:")
-            for name in st.session_state.saved_results.keys():
-                st.write(f"- {name}")
-    else:
-        st.write("Please select grouping columns and add at least one aggregation.")
+        # Create a list to store aggregation selections
+        if 'agg_list' not in st.session_state:
+            st.session_state.agg_list = []
 
+        # Let user add multiple aggregations
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            agg_column = st.selectbox("Select column:", st.session_state.df.columns)
+        with col2:
+            agg_function = st.selectbox("Select function:", agg_functions)
+        with col3:
+            if st.button("Add Aggregation"):
+                st.session_state.agg_list.append((agg_column, agg_function))
+
+        # Display and allow removal of selected aggregations
+        for i, (col, func) in enumerate(st.session_state.agg_list):
+            st.write(f"{i+1}. {col} - {func}")
+            if st.button(f"Remove {i+1}"):
+                st.session_state.agg_list.pop(i)
+                st.rerun()
+
+        if group_columns and st.session_state.agg_list:
+            # Create a dictionary for aggregation
+            agg_dict = {f"{col}_{func}_{i}": (col, func) for i, (col, func) in enumerate(st.session_state.agg_list)}
+            
+            # Perform groupby and aggregation
+            result = st.session_state.df.groupby(group_columns).agg(**agg_dict).reset_index()
+            
+            # Display the result
+            st.write("Aggregated Report:")
+            st.dataframe(result)
+
+            # Save result functionality
+            save_name = st.text_input("Enter a name to save this result table:")
+            if st.button("Save Result"):
+                if save_name:
+                    if 'saved_results' not in st.session_state:
+                        st.session_state.saved_results = {}
+                    st.session_state.saved_results[save_name] = result
+                    st.success(f"Result saved as '{save_name}'")
+                else:
+                    st.warning("Please enter a name to save the result.")
+
+            # Display saved results
+            if 'saved_results' in st.session_state and st.session_state.saved_results:
+                st.write("Saved Results:")
+                for name in st.session_state.saved_results.keys():
+                    st.write(f"- {name}")
+        else:
+            st.write("Please select grouping columns and add at least one aggregation.")
+     
+     with tab2:
+        st.write("views")
+
+     with tab3:
+        st.write("dashboard")
 
 # sections
 section_selection = st.pills("Select a section", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report"])
