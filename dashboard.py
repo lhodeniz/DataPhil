@@ -336,29 +336,42 @@ def report():
     # Let user select columns for grouping
     group_columns = st.multiselect("Select columns to group by:", st.session_state.df.columns)
 
-    # Let user select columns to aggregate
-    agg_columns = st.multiselect("Select columns to aggregate:", st.session_state.df.columns)
-
     # Define available aggregation functions
     agg_functions = ["mean", "sum", "count", "min", "max"]
 
-    # Create a dictionary to store aggregation selections
-    agg_dict = {}
+    # Create a list to store aggregation selections
+    if 'agg_list' not in st.session_state:
+        st.session_state.agg_list = []
 
-    # Let user select aggregation function for each selected column
-    for col in agg_columns:
-        agg_function = st.selectbox(f"Select aggregation function for {col}:", agg_functions)
-        agg_dict[col] = agg_function
+    # Let user add multiple aggregations
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        agg_column = st.selectbox("Select column:", st.session_state.df.columns)
+    with col2:
+        agg_function = st.selectbox("Select function:", agg_functions)
+    with col3:
+        if st.button("Add Aggregation"):
+            st.session_state.agg_list.append((agg_column, agg_function))
 
-    if group_columns and agg_columns:
+    # Display and allow removal of selected aggregations
+    for i, (col, func) in enumerate(st.session_state.agg_list):
+        st.write(f"{i+1}. {col} - {func}")
+        if st.button(f"Remove {i+1}"):
+            st.session_state.agg_list.pop(i)
+            st.rerun()
+
+    if group_columns and st.session_state.agg_list:
+        # Create a dictionary for aggregation
+        agg_dict = {f"{col}_{func}_{i}": (col, func) for i, (col, func) in enumerate(st.session_state.agg_list)}
+        
         # Perform groupby and aggregation
-        result = st.session_state.df.groupby(group_columns).agg(agg_dict).reset_index()
+        result = st.session_state.df.groupby(group_columns).agg(**agg_dict).reset_index()
         
         # Display the result
         st.write("Aggregated Report:")
         st.dataframe(result)
     else:
-        st.write("Please select grouping columns and aggregation columns.")
+        st.write("Please select grouping columns and add at least one aggregation.")
 
 
 # sections
