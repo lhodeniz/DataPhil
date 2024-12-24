@@ -370,6 +370,23 @@ def report():
         # Display the result
         st.write("Aggregated Report:")
         st.dataframe(result)
+
+        # Save result functionality
+        save_name = st.text_input("Enter a name to save this result table:")
+        if st.button("Save Result"):
+            if save_name:
+                if 'saved_results' not in st.session_state:
+                    st.session_state.saved_results = {}
+                st.session_state.saved_results[save_name] = result
+                st.success(f"Result saved as '{save_name}'")
+            else:
+                st.warning("Please enter a name to save the result.")
+
+        # Display saved results
+        if 'saved_results' in st.session_state and st.session_state.saved_results:
+            st.write("Saved Results:")
+            for name in st.session_state.saved_results.keys():
+                st.write(f"- {name}")
     else:
         st.write("Please select grouping columns and add at least one aggregation.")
 
