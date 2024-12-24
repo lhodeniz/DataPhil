@@ -49,6 +49,11 @@ def restore_backup():
 # functions
 
 def summary():
+    # Check if the dataframe is empty
+    if st.session_state.df.empty:
+        st.warning("No dataset uploaded. Please upload a dataset to view the summary.")
+        return  # Exit the function if no data is present
+        
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
         ["Shape", "Data Types", "Numerical Data", "Non-Numerical Data", "Missing Values", "Duplicated Rows"])
 
