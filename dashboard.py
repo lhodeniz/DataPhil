@@ -330,17 +330,54 @@ def upload_dataset():
             st.write(st.session_state.df.head())
 
 
+def report():
+    restore_backup()
+    
+    # Let user select columns for grouping
+    group_columns = st.multiselect("Select columns to group by:", st.session_state.df.columns)
+
+    # Let user select columns to aggregate
+    agg_columns = st.multiselect("Select columns to aggregate:", st.session_state.df.columns)
+
+    # Define available aggregation functions
+    agg_functions = ["mean", "sum", "count", "min", "max"]
+
+    # Create a dictionary to store aggregation selections
+    agg_dict = {}
+
+    # Let user select aggregation function for each selected column
+    for col in agg_columns:
+        agg_function = st.selectbox(f"Select aggregation function for {col}:", agg_functions)
+        agg_dict[col] = agg_function
+
+    if group_columns and agg_columns:
+        # Perform groupby and aggregation
+        result = st.session_state.df.groupby(group_columns).agg(agg_dict).reset_index()
+        
+        # Display the result
+        st.write("Aggregated Report:")
+        st.dataframe(result)
+    else:
+        st.write("Please select grouping columns and aggregation columns.")
+
+
 # sections
-section_selection = st.pills("Select a section", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export"])
+section_selection = st.pills("Select a section", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report"])
 # Display content based on sidebar selection
 if section_selection == "Upload Dataset":
     upload_dataset()
+
 elif section_selection == "Summary":
     summary()
 
 elif section_selection == "Fix Dataset":
     fix()
+
 elif section_selection == "New Columns":
     new_columns()
+
 elif section_selection == "Export":
     export()
+
+elif section_selection == "Report":
+    report()
