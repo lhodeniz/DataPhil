@@ -337,7 +337,7 @@ def report():
     group_columns = st.multiselect("Select columns to group by:", st.session_state.df.columns)
 
     # Define available aggregation functions
-    agg_functions = ["mean", "sum", "count", "min", "max"]
+    agg_functions = ["mean", "sum", "count", "min", "max", "median", "std", "var", "mode", "nunique", "quantile"]
 
     # Create a list to store aggregation selections
     if 'agg_list' not in st.session_state:
