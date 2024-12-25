@@ -483,7 +483,8 @@ def report():
         if df.empty:
             st.error("The DataFrame is empty. Please check your data source.")
         else:
-            pyg_html = get_streamlit_html(df, spec="./gw0.json", use_kernel_calc=True, debug=False)
+            pyg_html = get_streamlit_html(df, spec="./gw0.json", use_kernel_calc=True, spec_io_mode="json")
+
             components.html(pyg_html, height=1000)
 
 
