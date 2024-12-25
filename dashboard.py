@@ -481,6 +481,7 @@ def report():
 
      with tab3:
         restore_backup()
+
         # Let the user define the dashboard layout
         rows = st.number_input("Number of rows", min_value=1, value=2)
         cols = st.number_input("Number of columns", min_value=1, value=2)
@@ -489,7 +490,9 @@ def report():
         cell_positions = [f"{i+1}-{j+1}" for i in range(rows) for j in range(cols)]
 
         # Store the layout in session state
-        st.session_state.layout = {"rows": rows, "cols": cols, "cells": cell_positions}
+        if "layout" not in st.session_state or st.session_state.layout != {"rows": rows, "cols": cols, "cells": cell_positions}:
+            st.session_state.layout = {"rows": rows, "cols": cols, "cells": cell_positions}
+            st.session_state.charts = {}  # Reset charts on layout change
 
         # Allow the user to select available dataframes
         available_dfs = ['df']  # Start with 'df' as an option
@@ -499,20 +502,18 @@ def report():
 
         if available_dfs:
             selected_df = st.selectbox("Select a dataframe", available_dfs)
-    
+
             # Use the selected dataframe
             if selected_df == 'df':
                 df = st.session_state.df
-                st.dataframe(df.head())
-
             elif selected_df in st.session_state.saved_results:
                 df = st.session_state.saved_results[selected_df]
-                st.dataframe(df.head())
-                
             else:
                 st.error(f"The selected dataframe '{selected_df}' is not available in session state.")
                 st.stop()
-            
+
+            st.dataframe(df.head())
+
             # Let the user select the chart type
             chart_types = [
                 "area_chart", "bar_chart", "line_chart", "scatter_chart", "map",
@@ -525,7 +526,7 @@ def report():
             if selected_chart in ["area_chart", "bar_chart", "line_chart", "scatter_chart"]:
                 sample_code = f"""
                 st.{selected_chart}(
-                    data={selected_df},
+                    data=df,
                     x=None,
                     y=None,
                     x_label=None,
@@ -538,8 +539,8 @@ def report():
                 """
             elif selected_chart == "map":
                 sample_code = f"""
-            st.map(
-                    data={selected_df},
+                st.map(
+                    data=df,
                     latitude=None,
                     longitude=None,
                     color=None,
@@ -549,15 +550,15 @@ def report():
                 """
             else:
                 sample_code = f"""    
-    # For {selected_chart}, you might need to import additional libraries
-    # and create the chart object before passing it to st.{selected_chart}
+        # For {selected_chart}, you might need to import additional libraries
+        # and create the chart object before passing it to st.{selected_chart}
 
-    # Example:
-    # chart = create_{selected_chart[:-6]}({selected_df})
-    # st.{selected_chart}(chart)
+        # Example:
+        # chart = create_{selected_chart[:-6]}(df)
+        # st.{selected_chart}(chart)
 
-    # Replace the above with your specific {selected_chart} implementation
-    """
+        # Replace the above with your specific {selected_chart} implementation
+        """
 
             st.code(sample_code, language='python')
 
@@ -566,19 +567,17 @@ def report():
 
             # Ask for chart title and axis labels
             chart_title = st.text_input("Chart title")
- 
-            # Let the user select the cell position
 
+            # Let the user select the cell position
             selected_cell = st.selectbox("Select cell position", st.session_state.layout["cells"])
 
             # Create the chart when the user clicks a button
             if st.button("Create Chart"):
-                # Store the chart in session state
                 st.session_state.charts[selected_cell] = {
                     "type": "custom",
                     "code": user_code,
                     "title": chart_title,
-                    "selected_df": selected_df
+                    "data": df  # Store the actual dataframe snapshot
                 }
                 st.success(f"Chart created and placed in cell {selected_cell}")
 
@@ -593,20 +592,13 @@ def report():
                         chart_data = st.session_state.charts[cell]
                         with col:
                             st.subheader(chart_data["title"])
-                            # Execute the custom code
                             try:
-                                # Make sure the selected dataframe is available in the execution context
-                                if chart_data['selected_df'] in st.session_state.saved_results:
-                                    exec(f"{chart_data['selected_df']} = st.session_state.saved_results['{chart_data['selected_df']}']")
-                                elif chart_data['selected_df'] == 'df':
-                                    exec(f"{chart_data['selected_df']} = st.session_state.df")
-                                else:
-                                    raise KeyError(f"Dataframe '{chart_data['selected_df']}' not found in session state")
-                                
-                                exec(chart_data["code"])
+                                # Execute the custom code with the saved dataframe
+                                exec(chart_data["code"], {"df": chart_data["data"], "st": st})
                             except Exception as e:
                                 st.error(f"Error executing custom code: {str(e)}")
                                 st.error(f"Chart data: {chart_data}")
+
 
 # sections
 section_selection = st.pills("Select a section", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report"])
