@@ -5,8 +5,11 @@ import streamlit as st
 import numpy as np
 import os
 
+
 # page config
 st.set_page_config(page_title="DataPhil", layout="wide")
+
+show_only_dashboard = st.toggle("Show Only Dashboard")
 
 # header
 st.markdown("<h2 style='text-align: center;'>Welcome to DataPhil!👋</h2>",
@@ -584,6 +587,7 @@ def report():
             # Display the dashboard
             st.title("Dashboard")
 
+
             for i in range(st.session_state.layout["rows"]):
                 cols = st.columns(st.session_state.layout["cols"])
                 for j, col in enumerate(cols):
@@ -599,24 +603,48 @@ def report():
                                 st.error(f"Error executing custom code: {str(e)}")
                                 st.error(f"Chart data: {chart_data}")
 
+def dashboard():
+            # Display the dashboard
+            st.title("Dashboard")
 
-# sections
-section_selection = st.pills("Select a section", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report"])
-# Display content based on sidebar selection
-if section_selection == "Upload Dataset":
-    upload_dataset()
 
-elif section_selection == "Summary":
-    summary()
+            for i in range(st.session_state.layout["rows"]):
+                cols = st.columns(st.session_state.layout["cols"])
+                for j, col in enumerate(cols):
+                    cell = f"{i+1}-{j+1}"
+                    if cell in st.session_state.charts:
+                        chart_data = st.session_state.charts[cell]
+                        with col:
+                            st.subheader(chart_data["title"])
+                            try:
+                                # Execute the custom code with the saved dataframe
+                                exec(chart_data["code"], {"df": chart_data["data"], "st": st})
+                            except Exception as e:
+                                st.error(f"Error executing custom code: {str(e)}")
+                                st.error(f"Chart data: {chart_data}")
 
-elif section_selection == "Fix Dataset":
-    fix()
+# Show the dashboard if toggle is active
+if show_only_dashboard:
+    dashboard()
+else:
+    # sections
+    section_selection = st.pills("Select a section", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report"])
+    # Display content based on sidebar selection
+    if section_selection == "Upload Dataset":
+        upload_dataset()
 
-elif section_selection == "New Columns":
-    new_columns()
+    elif section_selection == "Summary":
+        summary()
 
-elif section_selection == "Export":
-    export()
+    elif section_selection == "Fix Dataset":
+        fix()
 
-elif section_selection == "Report":
-    report()
+    elif section_selection == "New Columns":
+        new_columns()
+
+    elif section_selection == "Export":
+        export()
+
+    elif section_selection == "Report":
+        report()
+
