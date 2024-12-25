@@ -480,9 +480,11 @@ def report():
         import streamlit.components.v1 as components
         import pygwalker as pyg
         from pygwalker.api.streamlit import get_streamlit_html
-
-        pyg_html = get_streamlit_html(df, spec="./gw0.json", use_kernel_calc=True, debug=False)
-        components.html(pyg_html, height=1000)
+        if df.empty:
+            st.error("The DataFrame is empty. Please check your data source.")
+        else:
+            pyg_html = get_streamlit_html(df, spec="./gw0.json", use_kernel_calc=True, debug=False)
+            components.html(pyg_html, height=1000)
 
 
 
