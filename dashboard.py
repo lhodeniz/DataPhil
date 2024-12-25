@@ -338,7 +338,7 @@ def upload_dataset():
 
 
 def report():
-     tab1, tab2, tab3 = st.tabs(["Tables", "Filters", "Dashboard"])
+     tab1, tab2, tab3, tab4 = st.tabs(["Tables", "Filters", "Visualization","Dashboard"])
  
      with tab1:    
         restore_backup()
@@ -476,8 +476,18 @@ def report():
             st.write("Saved Results:")
             for name in st.session_state.saved_results.keys():
                 st.write(f"- {name}")
-
      with tab3:
+        import streamlit.components.v1 as components
+        import pygwalker as pyg
+        from pygwalker.api.streamlit import get_streamlit_html
+
+        pyg_html = get_streamlit_html(df, spec="./gw0.json", use_kernel_calc=True, debug=False)
+        components.html(pyg_html, height=1000)
+
+
+
+
+     with tab4:
         restore_backup()
 
         # Let the user define the dashboard layout
