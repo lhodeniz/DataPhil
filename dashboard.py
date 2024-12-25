@@ -578,32 +578,42 @@ def report():
                     "data": df  # Store the actual dataframe snapshot
                 }
                 st.success(f"Chart created and placed in cell {selected_cell}")
-
+            
+            
             # Display the dashboard
             dashboard()
 
 def dashboard():
-            if "rows" not in st.session_state.layout or "cols" not in st.session_state.layout:
-             st.error("Dashboard layout is not configured. Please set it up in the Report section first.")
-             return
-            # Display the dashboard
-            st.title("Dashboard")
+    if "rows" not in st.session_state.layout or "cols" not in st.session_state.layout:
+        st.error("Dashboard layout is not configured. Please set it up in the Report section first.")
+        return
 
+    # Allow user to enter a custom title only if the toggle is off
+    if not show_only_dashboard:
+        custom_title = st.text_input("Enter dashboard title:", "Dashboard")
+        st.session_state.custom_dashboard_title = custom_title
 
-            for i in range(st.session_state.layout["rows"]):
-                cols = st.columns(st.session_state.layout["cols"])
-                for j, col in enumerate(cols):
-                    cell = f"{i+1}-{j+1}"
-                    if cell in st.session_state.charts:
-                        chart_data = st.session_state.charts[cell]
-                        with col:
-                            st.subheader(chart_data["title"])
-                            try:
-                                # Execute the custom code with the saved dataframe
-                                exec(chart_data["code"], {"df": chart_data["data"], "st": st})
-                            except Exception as e:
-                                st.error(f"Error executing custom code: {str(e)}")
-                                st.error(f"Chart data: {chart_data}")
+    else:
+        # Retrieve the stored title from session state, or default to "Dashboard"
+        custom_title = st.session_state.get("custom_dashboard_title", "Dashboard")
+    
+    # Display the dashboard with custom title
+    st.title(custom_title)
+
+    for i in range(st.session_state.layout["rows"]):
+        cols = st.columns(st.session_state.layout["cols"])
+        for j, col in enumerate(cols):
+            cell = f"{i+1}-{j+1}"
+            if cell in st.session_state.charts:
+                chart_data = st.session_state.charts[cell]
+                with col:
+                    st.subheader(chart_data["title"])
+                    try:
+                        # Execute the custom code with the saved dataframe
+                        exec(chart_data["code"], {"df": chart_data["data"], "st": st})
+                    except Exception as e:
+                        st.error(f"Error executing custom code: {str(e)}")
+                        st.error(f"Chart data: {chart_data}")
 
 # Show the dashboard if toggle is active
 if show_only_dashboard:
