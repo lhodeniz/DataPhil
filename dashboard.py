@@ -599,6 +599,9 @@ def report():
                                 st.error(f"Chart data: {chart_data}")
 
 def dashboard():
+            if "rows" not in st.session_state.layout or "cols" not in st.session_state.layout:
+             st.error("Dashboard layout is not configured. Please set it up in the Report section first.")
+             return
             # Display the dashboard
             st.title("Dashboard")
 
