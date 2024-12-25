@@ -503,8 +503,12 @@ def report():
             # Use the selected dataframe
             if selected_df == 'df':
                 df = st.session_state.df
+                st.dataframe(df.head())
+
             elif selected_df in st.session_state.saved_results:
                 df = st.session_state.saved_results[selected_df]
+                st.dataframe(df.head())
+                
             else:
                 st.error(f"The selected dataframe '{selected_df}' is not available in session state.")
                 st.stop()
