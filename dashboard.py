@@ -580,23 +580,7 @@ def report():
                 st.success(f"Chart created and placed in cell {selected_cell}")
 
             # Display the dashboard
-            st.title("Dashboard")
-
-
-            for i in range(st.session_state.layout["rows"]):
-                cols = st.columns(st.session_state.layout["cols"])
-                for j, col in enumerate(cols):
-                    cell = f"{i+1}-{j+1}"
-                    if cell in st.session_state.charts:
-                        chart_data = st.session_state.charts[cell]
-                        with col:
-                            st.subheader(chart_data["title"])
-                            try:
-                                # Execute the custom code with the saved dataframe
-                                exec(chart_data["code"], {"df": chart_data["data"], "st": st})
-                            except Exception as e:
-                                st.error(f"Error executing custom code: {str(e)}")
-                                st.error(f"Chart data: {chart_data}")
+            dashboard()
 
 def dashboard():
             if "rows" not in st.session_state.layout or "cols" not in st.session_state.layout:
