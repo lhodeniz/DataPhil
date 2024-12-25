@@ -11,11 +11,6 @@ st.set_page_config(page_title="DataPhil", layout="wide")
 
 show_only_dashboard = st.toggle("Show Only Dashboard")
 
-# header
-st.markdown("<h2 style='text-align: center;'>Welcome to DataPhil!👋</h2>",
-            unsafe_allow_html=True)
-st.markdown("<h6 style='text-align: center;'><i>Your Data, Your Way—Fast & Easy!</i></h6>", 
-            unsafe_allow_html=True)
 
 # initializations
 
@@ -627,6 +622,12 @@ def dashboard():
 if show_only_dashboard:
     dashboard()
 else:
+    # header
+    st.markdown("<h2 style='text-align: center;'>Welcome to DataPhil!👋</h2>",
+            unsafe_allow_html=True)
+    st.markdown("<h6 style='text-align: center;'><i>Your Data, Your Way—Fast & Easy!</i></h6>", 
+            unsafe_allow_html=True)
+
     # sections
     section_selection = st.pills("Select a section", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report"])
     # Display content based on sidebar selection
