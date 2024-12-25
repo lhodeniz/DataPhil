@@ -598,7 +598,16 @@ def dashboard():
         custom_title = st.session_state.get("custom_dashboard_title", "Dashboard")
     
     # Display the dashboard with custom title
-    st.title(custom_title)
+    # Center and display the title
+    st.markdown(
+        f"""
+        <h1 style="text-align: center; margin-top: 0px;">
+            {custom_title}
+        </h1>
+        """,
+        unsafe_allow_html=True
+    )
+
 
     for i in range(st.session_state.layout["rows"]):
         cols = st.columns(st.session_state.layout["cols"])
