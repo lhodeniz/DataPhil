@@ -42,6 +42,9 @@ if "charts" not in st.session_state:
 if 'saved_results' not in st.session_state:
     st.session_state.saved_results = {}
 
+if 'filters' not in st.session_state:
+    st.session_state.filters = []
+
 # backup of session
 def backup_df():
     if 'df_backup' not in st.session_state or not st.session_state.df_backup.equals(st.session_state.df):
@@ -336,11 +339,29 @@ def upload_dataset():
             st.success(f"Using previously uploaded dataset: {st.session_state.uploaded_file}")
             st.write(st.session_state.df.head())
 
+def add_filter():
+    if 'filters' not in st.session_state or not isinstance(st.session_state.filters, list):
+        st.session_state.filters = []
+    st.session_state.filters = st.session_state.filters + [{}]
+
+def remove_filter(index):
+    filters = st.session_state.get('filters', [])
+    filters.pop(index)
+    st.session_state.filters = filters
+
+def apply_filters(df):
+    for f in st.session_state.get('filters', []):
+        if f.get('column') and f.get('value') is not None:
+            if pd.api.types.is_numeric_dtype(df[f['column']]):
+                df = df[df[f['column']].between(*f['value'])]
+            else:
+                df = df[df[f['column']].isin(f['value'])]
+    return df
 
 def report():
-     tab1, tab2, tab3, tab4 = st.tabs(["Tables", "Filters", "Visualization","Dashboard"])
+     tab1, tab2, tab3 = st.tabs(["Tables", "Filters", "Visualization"])
  
-     with tab1:    
+     with tab1: #Tables    
         restore_backup()
         
         # Let user select columns for grouping
@@ -400,7 +421,7 @@ def report():
         else:
             st.write("Please select grouping columns and add at least one aggregation.")
      
-     with tab2:
+     with tab2: #Filters
         restore_backup()
         # Step 1: Select dataframe
         dataframe_options = ["Original Dataframe"] + list(st.session_state.get('saved_results', {}).keys())
@@ -438,7 +459,7 @@ def report():
                 st.rerun()
         
         # Step 3: Apply filters
-        if st.button("Apply Filters", key="apply_filters"):
+        if st.button("Apply Filters", key="apply_filters_bt"):
             filtered_df = df.copy()
             if st.session_state.filter_conditions:
                 for i, (col, op, val, log) in enumerate(st.session_state.filter_conditions):
@@ -476,7 +497,8 @@ def report():
             st.write("Saved Results:")
             for name in st.session_state.saved_results.keys():
                 st.write(f"- {name}")
-     with tab3:
+
+     with tab3: #Visualization
         import streamlit.components.v1 as components
         import pygwalker as pyg
         from pygwalker.api.streamlit import get_streamlit_html
@@ -487,15 +509,14 @@ def report():
 
             components.html(pyg_html, height=1000)
 
+def dashboard_tab():
 
-
-
-     with tab4:
         restore_backup()
 
-        # Let the user define the dashboard layout
-        rows = st.number_input("Number of rows", min_value=1, value=2)
-        cols = st.number_input("Number of columns", min_value=1, value=2)
+        with st.container(border = True):
+            # Let the user define the dashboard layout
+            rows = st.number_input("Number of rows", min_value=1, value=2)
+            cols = st.number_input("Number of columns", min_value=1, value=2)
 
         # Create a list of cell positions
         cell_positions = [f"{i+1}-{j+1}" for i in range(rows) for j in range(cols)]
@@ -524,6 +545,8 @@ def report():
                 st.stop()
 
             st.dataframe(df.head())
+            st.session_state.selected_df = df
+
 
             # Let the user select the chart type
             chart_types = [
@@ -597,6 +620,59 @@ def report():
             dashboard()
 
 def dashboard():
+    with st.sidebar:
+        df = st.session_state.selected_df
+        st.write("Dashboard Filters")
+         
+        # Button to add a new filter
+        st.button("Add Filter", on_click=add_filter)
+
+        # Display and configure each filter
+        for i, filter in enumerate(st.session_state.get('filters', [])):
+            with st.expander(f"Filter {i+1}", expanded=True):
+                col1, col2, col3 = st.columns([2,2,1])
+                
+                with col1:
+                    filter['column'] = st.selectbox("Select Column", df.columns, key=f"col_{i}")
+                
+                with col2:
+                    if filter['column']:
+                        if pd.api.types.is_numeric_dtype(df[filter['column']]):
+                            min_val, max_val = float(df[filter['column']].min()), float(df[filter['column']].max())
+                            filter['value'] = st.slider("Select Range", min_val, max_val, (min_val, max_val), key=f"val_{i}")
+                        else:
+                            options = df[filter['column']].unique().tolist()
+                            
+                            # Create a search input
+                            search_term = st.text_input(f"Search {filter['column']}", key=f"search_{i}")
+                            
+                            # Filter options based on search term
+                            filtered_options = [opt for opt in options if search_term.lower() in str(opt).lower()]
+                            
+                            # Limit to 5 options
+                            display_options = filtered_options[:5]
+                            
+                            # Create a container for the checkboxes
+                            with st.container(border=True, height=200):
+                                selected_values = []
+                                for option in display_options:
+                                    if st.checkbox(str(option), key=f"val_{i}_{option}"):
+                                        selected_values.append(option)
+                            
+                            filter['value'] = selected_values
+
+                            # Show how many options are hidden
+                            if len(filtered_options) > 5:
+                                st.write(f"{len(filtered_options) - 5} more options not shown. Refine your search to see them.")
+                
+                with col3:
+                    st.button("Remove", key=f"remove_{i}", on_click=remove_filter, args=(i,))
+        if st.button("Update Dashboard"):
+            df = apply_filters(df)
+
+
+
+
     if "rows" not in st.session_state.layout or "cols" not in st.session_state.layout:
         st.error("Dashboard layout is not configured. Please set it up in the Report section first.")
         return
@@ -632,10 +708,19 @@ def dashboard():
                     st.subheader(chart_data["title"])
                     try:
                         # Execute the custom code with the saved dataframe
-                        exec(chart_data["code"], {"df": chart_data["data"], "st": st})
+                        exec(chart_data["code"], {"df": df, "st": st})
                     except Exception as e:
                         st.error(f"Error executing custom code: {str(e)}")
                         st.error(f"Chart data: {chart_data}")
+
+
+
+
+
+
+
+
+
 
 # Show the dashboard if toggle is active
 if show_only_dashboard:
@@ -648,7 +733,7 @@ else:
             unsafe_allow_html=True)
 
     # sections
-    section_selection = st.pills("Select a section", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report"])
+    section_selection = st.pills("Select a section", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report", "Dashboard"])
     # Display content based on sidebar selection
     if section_selection == "Upload Dataset":
         upload_dataset()
@@ -667,4 +752,5 @@ else:
 
     elif section_selection == "Report":
         report()
-
+    elif section_selection == "Dashboard":
+        dashboard_tab()
