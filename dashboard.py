@@ -642,7 +642,26 @@ def dashboard():
                     if filter['column']:
                         if pd.api.types.is_numeric_dtype(df[filter['column']]):
                             min_val, max_val = float(df[filter['column']].min()), float(df[filter['column']].max())
-                            filter['value'] = st.slider("Select Range", min_val, max_val, (min_val, max_val), key=f"val_{i}")
+                            
+                            # Use separate number inputs without columns
+                            start_value = st.number_input(f"Start value for {filter['column']}", 
+                                                          value=min_val, 
+                                                          min_value=min_val, 
+                                                          max_value=max_val, 
+                                                          key=f"start_{i}")
+                            
+                            end_value = st.number_input(f"End value for {filter['column']}", 
+                                                        value=max_val, 
+                                                        min_value=min_val, 
+                                                        max_value=max_val, 
+                                                        key=f"end_{i}")
+                            
+                            # Use the input values for the slider
+                            filter['value'] = st.slider("Select Range", 
+                                                        min_value=min_val, 
+                                                        max_value=max_val, 
+                                                        value=(start_value, end_value), 
+                                                        key=f"val_{i}")
                         else:
                             options = df[filter['column']].unique().tolist()
                             
