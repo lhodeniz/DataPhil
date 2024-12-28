@@ -48,6 +48,12 @@ if 'saved_results' not in st.session_state:
 if 'filters' not in st.session_state:
     st.session_state.filters = []
 
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
+
+if 'last_interaction' not in st.session_state:
+    st.session_state.last_interaction = {"user": "", "assistant": ""}
+
 # backup of session
 def backup_df():
     if 'df_backup' not in st.session_state or not st.session_state.df_backup.equals(st.session_state.df):
@@ -361,6 +367,232 @@ def apply_filters(df):
                 df = df[df[f['column']].isin(f['value'])]
     return df
 
+# Function to generate chart code based on user input
+def generate_chart_code(chart_type, df_name='df'):
+    if chart_type in ["area_chart", "bar_chart", "line_chart"]:
+        return f"""
+        st.{chart_type}(
+            data={df_name},
+            x=None,
+            y=None,
+            x_label=None,
+            y_label=None,
+            color=None,
+            width=None,
+            height=None,
+            use_container_width=True
+        )
+        """
+    elif chart_type == "scatter_chart":
+        return f"""
+        import altair as alt
+
+        scatter_plot = alt.Chart({df_name}).mark_point().encode(
+            x='x_column',
+            y='y_column',
+            color='color_column'
+        )
+        st.altair_chart(scatter_plot, use_container_width=True)
+        """
+    elif chart_type == "map":
+        return f"""
+        st.map(
+            data={df_name},
+            latitude='latitude_column',
+            longitude='longitude_column',
+            size='size_column',
+            color='color_column',
+            use_container_width=True
+        )
+        """
+    elif chart_type == "pie_chart":
+        return f"""
+        import plotly.express as px
+
+        fig = px.pie(
+            {df_name}, 
+            names='category_column', 
+            values='value_column', 
+            title='Pie Chart Example'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        """
+    elif chart_type == "histogram":
+        return f"""
+        import plotly.express as px
+
+        fig = px.histogram(
+            {df_name}, 
+            x='x_column', 
+            color='color_column', 
+            title='Histogram Example'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        """
+    elif chart_type == "box_plot":
+        return f"""
+        import plotly.express as px
+
+        fig = px.box(
+            {df_name}, 
+            x='category_column', 
+            y='value_column', 
+            color='category_column', 
+            title='Box Plot Example'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        """
+    elif chart_type == "heatmap":
+        return f"""
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots()
+        sns.heatmap({df_name}.corr(), annot=True, ax=ax)
+        st.pyplot(fig)
+        """
+    elif chart_type == "violin_chart":
+        return f"""
+        import plotly.express as px
+
+        fig = px.violin(
+            {df_name}, 
+            y='value_column', 
+            x='category_column', 
+            color='category_column', 
+            box=True, 
+            points='all', 
+            title='Violin Plot Example'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        """
+    elif chart_type == "bubble_chart":
+        return f"""
+        import plotly.express as px
+
+        fig = px.scatter(
+            {df_name}, 
+            x='x_column', 
+            y='y_column', 
+            size='size_column', 
+            color='color_column', 
+            title='Bubble Chart Example', 
+            hover_name='hover_column'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        """
+    elif chart_type == "sunburst_chart":
+        return f"""
+        import plotly.express as px
+
+        fig = px.sunburst(
+            {df_name}, 
+            path=['category_column_1', 'category_column_2'], 
+            values='value_column', 
+            title='Sunburst Chart Example'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        """
+    elif chart_type == "treemap":
+        return f"""
+        import plotly.express as px
+
+        fig = px.treemap(
+            {df_name}, 
+            path=['category_column_1', 'category_column_2'], 
+            values='value_column', 
+            title='Treemap Example'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        """
+    elif chart_type == "streamgraph":
+        return f"""
+        import altair as alt
+
+        streamgraph = alt.Chart({df_name}).mark_area().encode(
+            x='x_column',
+            y='y_column',
+            color='category_column'
+        )
+        st.altair_chart(streamgraph, use_container_width=True)
+        """
+    elif chart_type == "candlestick_chart":
+        return f"""
+        import plotly.graph_objects as go
+
+        fig = go.Figure(data=[go.Candlestick(
+            x={df_name}['date_column'],
+            open={df_name}['open_column'],
+            high={df_name}['high_column'],
+            low={df_name}['low_column'],
+            close={df_name}['close_column']
+        )])
+        st.plotly_chart(fig, use_container_width=True)
+        """
+    elif chart_type == "radar_chart":
+        return f"""
+        import plotly.express as px
+
+        fig = px.line_polar(
+            {df_name}, 
+            r='value_column', 
+            theta='category_column', 
+            color='group_column', 
+            line_close=True,
+            title='Radar Chart Example'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        """
+    elif chart_type == "wordcloud":
+        return f"""
+        from wordcloud import WordCloud
+        import matplotlib.pyplot as plt
+
+        text = ' '.join({df_name}['text_column'])
+        wordcloud = WordCloud(width=800, height=400).generate(text)
+
+        fig, ax = plt.subplots()
+        ax.imshow(wordcloud, interpolation='bilinear')
+        ax.axis('off')
+        st.pyplot(fig)
+        """
+    elif chart_type == "timeline_chart":
+        return f"""
+        import plotly.express as px
+
+        fig = px.timeline(
+            {df_name}, 
+            x_start='start_column', 
+            x_end='end_column', 
+            y='category_column', 
+            color='group_column',
+            title='Timeline Chart Example'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        """
+    elif chart_type == "density_chart":
+        return f"""
+        import plotly.express as px
+
+        fig = px.density_contour(
+            {df_name}, 
+            x='x_column', 
+            y='y_column', 
+            color='category_column', 
+            title='Density Chart Example'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        """
+    else:
+        return f"""
+        # The chart type '{chart_type}' is not directly supported or requires additional customization.
+        # Please add your custom code for '{chart_type}' below.
+
+        # Example:
+        # st.write("Custom implementation for {chart_type}")
+        """
+
+
 def report():
      tab1, tab2, tab3 = st.tabs(["Tables", "Filters", "Visualization"])
  
@@ -551,53 +783,22 @@ def dashboard_tab():
             st.session_state.selected_df = df
 
 
-            # Let the user select the chart type
-            chart_types = [
-                "area_chart", "bar_chart", "line_chart", "scatter_chart", "map",
-                "pyplot", "altair_chart", "vega_lite_chart", "plotly_chart",
-                "bokeh_chart", "pydeck_chart", "graphviz_chart"
+            # List of available chart types
+            chart_list = [
+                "area_chart", "bar_chart", "line_chart", "scatter_chart", "map", 
+                "pie_chart", "histogram", "box_plot", "heatmap", "violin_chart", 
+                "bubble_chart", "sunburst_chart", "treemap", "streamgraph", 
+                "candlestick_chart", "radar_chart", "wordcloud", "timeline_chart", 
+                "density_chart"
             ]
-            selected_chart = st.selectbox("Select chart type", chart_types)
 
-            # Show sample code based on the selected chart type
-            if selected_chart in ["area_chart", "bar_chart", "line_chart", "scatter_chart"]:
-                sample_code = f"""
-                st.{selected_chart}(
-                    data=df,
-                    x=None,
-                    y=None,
-                    x_label=None,
-                    y_label=None,
-                    color=None,
-                    width=None,
-                    height=None,
-                    use_container_width=True
-                )
-                """
-            elif selected_chart == "map":
-                sample_code = f"""
-                st.map(
-                    data=df,
-                    latitude=None,
-                    longitude=None,
-                    color=None,
-                    size=None,
-                    use_container_width=True
-                )
-                """
-            else:
-                sample_code = f"""    
-        # For {selected_chart}, you might need to import additional libraries
-        # and create the chart object before passing it to st.{selected_chart}
+            # Let the user select the chart type
+            selected_chart = st.selectbox("Select a chart type", chart_list)
 
-        # Example:
-        # chart = create_{selected_chart[:-6]}(df)
-        # st.{selected_chart}(chart)
-
-        # Replace the above with your specific {selected_chart} implementation
-        """
-
-            st.code(sample_code, language='python')
+            # Display sample code for the selected chart type
+            if selected_chart:
+                sample_code = generate_chart_code(selected_chart)
+                st.code(sample_code, language='python')
 
             # Let the user input their own code
             user_code = st.text_area("Enter your custom code for the chart:", height=200)
@@ -617,11 +818,9 @@ def dashboard_tab():
                     "data": df  # Store the actual dataframe snapshot
                 }
                 st.success(f"Chart created and placed in cell {selected_cell}")
-            
-            
+
             # Display the dashboard
             dashboard()
-
 def dashboard():
     with st.sidebar:
         df = st.session_state.selected_df
