@@ -646,33 +646,18 @@ def dashboard():
                         else:
                             options = df[filter['column']].unique().tolist()
                             
-                            # Create a search input
-                            search_term = st.text_input(f"Search {filter['column']}", key=f"search_{i}")
-                            
-                            # Filter options based on search term
-                            filtered_options = [opt for opt in options if search_term.lower() in str(opt).lower()]
-                            
-                            # Limit to 5 options
-                            display_options = filtered_options[:5]
-                            
-                            # Create a container for the checkboxes
-                            with st.container(border=True, height=200):
-                                # Add "Select All" option
-                                select_all = st.checkbox("Select All", key=f"select_all_{i}")
-                                selected_values = []
-                                for option in display_options:
-                                    if select_all or st.checkbox(str(option), key=f"val_{i}_{option}"):
-                                        selected_values.append(option)
-                            
-                            # If "Select All" is checked, include all filtered options
-                            if select_all:
-                                selected_values = filtered_options
+                            # Use multiselect for both search and selection
+                            selected_values = st.multiselect(
+                                f"Select values for {filter['column']}",
+                                options=options,
+                                default=options if st.checkbox("Select All", key=f"select_all_{i}") else [],
+                                key=f"multiselect_{i}"
+                            )
                             
                             filter['value'] = selected_values
 
-                            # Show how many options are hidden
-                            if len(filtered_options) > 5:
-                                st.write(f"{len(filtered_options) - 5} more options not shown. Refine your search to see them.")                
+                            # Show how many options are selected
+                            st.write(f"{len(selected_values)} option(s) selected.")
                 with col3:
                     st.button("Remove", key=f"remove_{i}", on_click=remove_filter, args=(i,))
         if st.button("Update Dashboard"):
