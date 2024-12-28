@@ -657,17 +657,22 @@ def dashboard():
                             
                             # Create a container for the checkboxes
                             with st.container(border=True, height=200):
+                                # Add "Select All" option
+                                select_all = st.checkbox("Select All", key=f"select_all_{i}")
                                 selected_values = []
                                 for option in display_options:
-                                    if st.checkbox(str(option), key=f"val_{i}_{option}"):
+                                    if select_all or st.checkbox(str(option), key=f"val_{i}_{option}"):
                                         selected_values.append(option)
+                            
+                            # If "Select All" is checked, include all filtered options
+                            if select_all:
+                                selected_values = filtered_options
                             
                             filter['value'] = selected_values
 
                             # Show how many options are hidden
                             if len(filtered_options) > 5:
-                                st.write(f"{len(filtered_options) - 5} more options not shown. Refine your search to see them.")
-                
+                                st.write(f"{len(filtered_options) - 5} more options not shown. Refine your search to see them.")                
                 with col3:
                     st.button("Remove", key=f"remove_{i}", on_click=remove_filter, args=(i,))
         if st.button("Update Dashboard"):
@@ -728,7 +733,7 @@ else:
             unsafe_allow_html=True)
 
     # sections
-    section_selection = st.pills("Select a section", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report", "Dashboard"])
+    section_selection = st.pills("", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report", "Dashboard"])
     # Display content based on sidebar selection
     if section_selection == "Upload Dataset":
         upload_dataset()
