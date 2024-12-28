@@ -23,6 +23,9 @@ if "uploaded_file" not in st.session_state:
 if 'df' not in st.session_state:
     st.session_state.df = pd.DataFrame()
 
+if 'selected_df' not in st.session_state:
+      st.session_state.selected_df = pd.DataFrame()
+
 if 'new_columns' not in st.session_state:
     st.session_state.new_columns = []
 
@@ -712,14 +715,6 @@ def dashboard():
                     except Exception as e:
                         st.error(f"Error executing custom code: {str(e)}")
                         st.error(f"Chart data: {chart_data}")
-
-
-
-
-
-
-
-
 
 
 # Show the dashboard if toggle is active
