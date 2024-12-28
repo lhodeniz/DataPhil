@@ -12,7 +12,7 @@ st.set_page_config(page_title="DataPhil", layout="wide")
 show_only_dashboard = st.toggle("Show Only Dashboard")
 
 
-# initializations
+# session initialize
 
 if "section_selection" not in st.session_state:
     st.session_state.section_selection = "Upload Dataset"
@@ -22,6 +22,9 @@ if "uploaded_file" not in st.session_state:
 
 if 'df' not in st.session_state:
     st.session_state.df = pd.DataFrame()
+
+if 'selected_df' not in st.session_state:
+    st.session_state.selected_df = pd.DataFrame()
 
 if 'new_columns' not in st.session_state:
     st.session_state.new_columns = []
@@ -340,9 +343,9 @@ def upload_dataset():
             st.write(st.session_state.df.head())
 
 def add_filter():
-    if 'filters' not in st.session_state or not isinstance(st.session_state.filters, list):
+    if 'filters' not in st.session_state:
         st.session_state.filters = []
-    st.session_state.filters = st.session_state.filters + [{}]
+    st.session_state.filters.append({})
 
 def remove_filter(index):
     filters = st.session_state.get('filters', [])
@@ -642,33 +645,44 @@ def dashboard():
                             filter['value'] = st.slider("Select Range", min_val, max_val, (min_val, max_val), key=f"val_{i}")
                         else:
                             options = df[filter['column']].unique().tolist()
-                            
-                            # Create a search input
-                            search_term = st.text_input(f"Search {filter['column']}", key=f"search_{i}")
-                            
-                            # Filter options based on search term
-                            filtered_options = [opt for opt in options if search_term.lower() in str(opt).lower()]
-                            
-                            # Limit to 5 options
-                            display_options = filtered_options[:5]
-                            
-                            # Create a container for the checkboxes
-                            with st.container(border=True, height=200):
-                                selected_values = []
-                                for option in display_options:
-                                    if st.checkbox(str(option), key=f"val_{i}_{option}"):
-                                        selected_values.append(option)
-                            
-                            filter['value'] = selected_values
-
-                            # Show how many options are hidden
-                            if len(filtered_options) > 5:
-                                st.write(f"{len(filtered_options) - 5} more options not shown. Refine your search to see them.")
+                            filter['value'] = st.multiselect("Select Values", options, default=options, key=f"val_{i}")
                 
                 with col3:
                     st.button("Remove", key=f"remove_{i}", on_click=remove_filter, args=(i,))
-        if st.button("Update Dashboard"):
-            df = apply_filters(df)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -708,17 +722,10 @@ def dashboard():
                     st.subheader(chart_data["title"])
                     try:
                         # Execute the custom code with the saved dataframe
-                        exec(chart_data["code"], {"df": df, "st": st})
+                        exec(chart_data["code"], {"df": chart_data["data"], "st": st})
                     except Exception as e:
                         st.error(f"Error executing custom code: {str(e)}")
                         st.error(f"Chart data: {chart_data}")
-
-
-
-
-
-
-
 
 
 
@@ -733,7 +740,7 @@ else:
             unsafe_allow_html=True)
 
     # sections
-    section_selection = st.pills("Select a section", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report", "Dashboard"])
+    section_selection = st.pills("", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report", "Dashboard"])
     # Display content based on sidebar selection
     if section_selection == "Upload Dataset":
         upload_dataset()
