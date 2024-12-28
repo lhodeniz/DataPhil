@@ -570,6 +570,29 @@ def generate_chart_code(chart_type, df_name='df'):
         )
         st.plotly_chart(fig, use_container_width=True)
         """
+    
+    elif chart_type == "gauge_chart":
+        return """
+        import plotly.graph_objects as go
+
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number+delta",
+            value=your_value,
+            delta={{'reference': reference_value}},
+            gauge={{'axis': {{'range': [None, max_value]}}}},
+            title={{'text': "Gauge Chart Example"}}
+        ))
+        st.plotly_chart(fig, use_container_width=True)
+        """
+    elif chart_type == "kpi_card":
+        return f"""
+        st.metric(
+            label="Metric Label",
+            value="Current Value",
+            delta="Delta Value",
+            help="Additional context about the metric"
+        )
+        """
     elif chart_type == "density_chart":
         return f"""
         import plotly.express as px
@@ -785,12 +808,29 @@ def dashboard_tab():
 
             # List of available chart types
             chart_list = [
-                "area_chart", "bar_chart", "line_chart", "scatter_chart", "map", 
-                "pie_chart", "histogram", "box_plot", "heatmap", "violin_chart", 
-                "bubble_chart", "sunburst_chart", "treemap", "streamgraph", 
-                "candlestick_chart", "radar_chart", "wordcloud", "timeline_chart", 
-                "density_chart"
+                "area_chart", 
+                "bar_chart", 
+                "line_chart", 
+                "scatter_chart", 
+                "map", 
+                "pie_chart", 
+                "histogram", 
+                "box_plot", 
+                "heatmap", 
+                "violin_chart", 
+                "bubble_chart", 
+                "sunburst_chart", 
+                "treemap", 
+                "streamgraph", 
+                "candlestick_chart", 
+                "radar_chart", 
+                "wordcloud", 
+                "timeline_chart", 
+                "density_chart", 
+                "gauge_chart", 
+                "kpi_card"
             ]
+
 
             # Let the user select the chart type
             selected_chart = st.selectbox("Select a chart type", chart_list)
