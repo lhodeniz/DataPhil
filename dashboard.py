@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 import numpy as np
 import os
-
+import json
 
 # page config
 st.set_page_config(page_title="DataPhil", layout="wide")
@@ -47,6 +47,10 @@ if 'saved_results' not in st.session_state:
 
 if 'filters' not in st.session_state:
     st.session_state.filters = []
+
+if 'json_file' not in st.session_state:
+    st.session_state.uploaded_file = None
+
 
 
 # backup of session
@@ -298,26 +302,48 @@ def export():
 
     # Ensure the dataframe is not empty
     if 'df' in st.session_state and not st.session_state.df.empty:
-        # Check if uploaded_file exists in session state
-        if 'uploaded_file' in st.session_state:
-            uploaded_file = st.session_state.uploaded_file
+        # Check if uploaded_file exists in session state and is valid
+        uploaded_file = st.session_state.get('uploaded_file')
+        if uploaded_file:
             # Generate the updated file name
             file_name = "updated_" + uploaded_file  # Adding _updated to the original filename
             file_name = file_name.replace(".csv", "_updated.csv")  # Ensure it has the .csv extension
-            
-            # Convert DataFrame to CSV and offer it for download
-            csv_data = st.session_state.df.to_csv(index=False)
-            
-            # Create a download button
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.download_button(
-                label="Download Updated Dataset",
-                data=csv_data,
-                file_name=file_name,
-                mime="text/csv"
-            )
         else:
-            st.error("No file uploaded. Please upload a dataset first.")
+            # Default filename if uploaded_file is None
+            file_name = "updated_dataset.csv"
+
+        # Convert DataFrame to CSV and offer it for download
+        csv_data = st.session_state.df.to_csv(index=False)
+
+        # Create a download button
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.download_button(
+            label="Download Updated Dataset",
+            data=csv_data,
+            file_name=file_name,
+            mime="text/csv"
+        )
+    else:
+        st.error("No dataset available for export. Please upload or create a dataset first.")
+
+    # Export settings functionality
+    if st.button('Export Settings'):
+        settings_json = export_settings()
+        st.download_button(
+            label="Download Settings",
+            data=settings_json,
+            file_name="app_settings.json",
+            mime="application/json"
+        )
+
+    # File uploader for importing settings
+    json_file = st.file_uploader("Choose a settings file (.json)", type="json")
+    if json_file is not None:
+        st.session_state.json_file = json_file
+        settings_json = json_file.getvalue().decode("utf-8")
+        import_settings(settings_json)
+        st.success("Settings imported successfully!")
+
 
 def upload_dataset():
 
@@ -861,6 +887,7 @@ def dashboard_tab():
 
         # Display the dashboard
         dashboard()
+
 def dashboard():
     with st.sidebar:
         df = st.session_state.selected_df
@@ -965,6 +992,89 @@ def dashboard():
                         st.error(f"Chart data: {chart_data}")
 
 
+def export_settings():
+    # Convert the DataFrame to a dictionary only if it's not empty
+    df_dict = st.session_state.df.to_dict(orient='split') if not st.session_state.df.empty else {}
+
+    # Convert charts to a serializable format
+    charts_serializable = {}
+    for cell, chart in st.session_state.get('charts', {}).items():
+        # Check if 'data' is a DataFrame and convert it
+        chart_data = chart.get('data', None)
+        if isinstance(chart_data, pd.DataFrame):
+            chart_data = chart_data.fillna('')  # Fill missing values if necessary
+            chart_data = chart_data.to_dict(orient='split')  # Convert DataFrame to dictionary
+
+        # Update the chart data with the serializable format
+        charts_serializable[cell] = {
+            'type': chart['type'],
+            'code': chart['code'],
+            'title': chart['title'],
+            'data': chart_data,
+        }
+
+    # Get other session state values
+    new_columns = st.session_state.get('new_columns', [])
+    layout = st.session_state.get('layout', {})
+
+    # Create the settings dictionary
+    settings = {
+        'df': df_dict,
+        'new_columns': new_columns,
+        'layout': layout,
+        'charts': charts_serializable,  # Use the serialized charts
+        'filters': st.session_state.get('filters', []),
+    }
+
+    # Return the serialized JSON string
+    return json.dumps(settings)
+
+def import_settings(settings_json):
+    try:
+        # Load settings from the JSON data
+        settings = json.loads(settings_json)
+
+        # Rebuild the DataFrame from the 'df' part of the settings if it's not empty
+        df_dict = settings.get('df', {})
+        if df_dict and 'data' in df_dict and 'columns' in df_dict:
+            # Rebuild DataFrame using the unpacking operator for 'split' orientation
+            st.session_state.df = pd.DataFrame(data=df_dict['data'], columns=df_dict['columns'])
+            if 'index' in df_dict:
+                st.session_state.df.index = pd.Index(df_dict['index'])
+        else:
+            st.session_state.df = pd.DataFrame()  # Empty DataFrame if 'df' is not in settings
+        
+        # Rebuild other session state values
+        st.session_state.new_columns = settings.get('new_columns', [])
+        st.session_state.layout = settings.get('layout', {})
+        
+        # Rebuild charts with data conversion (if any data is a DataFrame)
+        charts_data = settings.get('charts', {})
+        for cell, chart in charts_data.items():
+            # Convert 'data' back into a DataFrame if it's a dictionary representation of a DataFrame
+            chart_data = chart.get('data', None)
+            if chart_data and 'data' in chart_data and 'columns' in chart_data:
+                chart_data = pd.DataFrame(data=chart_data['data'], columns=chart_data['columns'])
+                if 'index' in chart_data:
+                    chart_data.index = pd.Index(chart_data['index'])
+
+            # Store the chart back into session state
+            st.session_state.charts[cell] = {
+                'type': chart['type'],
+                'code': chart['code'],
+                'title': chart['title'],
+                'data': chart_data,
+            }
+
+        # Handle any other session state variables (filters, etc.)
+        st.session_state.filters = settings.get('filters', [])
+
+        st.success("Settings imported successfully!")
+    except Exception as e:
+        st.error(f"Error importing settings: {e}")
+
+
+
 # Show the dashboard if toggle is active
 if show_only_dashboard:
     dashboard()
@@ -976,7 +1086,7 @@ else:
             unsafe_allow_html=True)
 
     # sections
-    section_selection = st.pills("", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Export", "Report", "Dashboard"])
+    section_selection = st.pills("", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Settings", "Report", "Dashboard"])
     # Display content based on sidebar selection
     if section_selection == "Upload Dataset":
         upload_dataset()
@@ -990,7 +1100,7 @@ else:
     elif section_selection == "New Columns":
         new_columns()
 
-    elif section_selection == "Export":
+    elif section_selection == "Settings":
         export()
 
     elif section_selection == "Report":
