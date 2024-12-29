@@ -48,11 +48,6 @@ if 'saved_results' not in st.session_state:
 if 'filters' not in st.session_state:
     st.session_state.filters = []
 
-if 'chat_history' not in st.session_state:
-    st.session_state.chat_history = []
-
-if 'last_interaction' not in st.session_state:
-    st.session_state.last_interaction = {"user": "", "assistant": ""}
 
 # backup of session
 def backup_df():
@@ -331,6 +326,14 @@ def upload_dataset():
 
     if uploaded_file is not None:
         try:
+            # Check if a new file is uploaded
+            if st.session_state.uploaded_file != uploaded_file.name:
+                # Clear charts when a new dataset is uploaded
+                st.session_state.charts = {}
+                st.session_state.layout = {}  # Optionally reset layout as well
+                st.success("Dashboard charts have been reset due to new dataset upload.")
+
+
             # Load the uploaded file into a DataFrame
             st.session_state.df = pd.read_csv(uploaded_file)
             st.session_state.uploaded_file = uploaded_file.name  # Save the file name in session state
