@@ -611,18 +611,26 @@ def generate_chart_code(chart_type, df_name='df'):
         """
     elif chart_type == "table":
         return f"""
-        # Grouping and Aggregating Data
+        # Grouping and Aggregating Data with Lambda Functions
         grouped_df = {df_name}.groupby(['column1', 'column2'], as_index=False).agg(
             {{
                 'column3': 'sum',  # Sum of column3
-                'column4': 'mean'  # Mean of column4
+                'column4': lambda x: x.max() - x.min(),  # Custom aggregation: range
+                'column5': 'mean'  # Mean of column5
             }}
         )
-        # Sorting and Selecting Top Rows
-        sorted_df = grouped_df.sort_values(by='column3', ascending=False).head(10)
+
+        # Sorting by Multiple Columns
+        sorted_df = grouped_df.sort_values(
+            by=['column3', 'column4'],  # Sort by column3 and column4
+            ascending=[False, True]  # Descending for column3, ascending for column4
+        )
+
+        # Selecting the Top Rows
+        top_rows = sorted_df.head(10)
 
         # Display the Resulting DataFrame
-        st.dataframe(sorted_df)
+        st.dataframe(top_rows)
         """
     else:
         return f"""
