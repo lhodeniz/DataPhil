@@ -928,7 +928,7 @@ def dashboard():
 
 
     if "rows" not in st.session_state.layout or "cols" not in st.session_state.layout:
-        st.error("Dashboard layout is not configured. Please set it up in the Report section first.")
+        st.error("Dashboard layout is not configured. Please set it up first.")
         return
 
     # Allow user to enter a custom title only if the toggle is off
