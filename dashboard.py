@@ -337,7 +337,7 @@ def export():
         )
 
     # File uploader for importing settings
-    json_file = st.file_uploader("Choose a settings file (.json)", type="json")
+    json_file = st.file_uploader("Choose a settings file", type="json")
     if json_file is not None:
         st.session_state.json_file = json_file
         settings_json = json_file.getvalue().decode("utf-8")
@@ -1082,7 +1082,7 @@ else:
     # header
     st.markdown("<h2 style='text-align: center;'>Welcome to DataPhil!👋</h2>",
             unsafe_allow_html=True)
-    st.markdown("<h6 style='text-align: center;'><i>Your Data, Your Way—Fast & Easy!</i></h6>", 
+    st.markdown("<h6 style='text-align: center;'>Your Data, Your Way—Fast & Easy!💩</h6>", 
             unsafe_allow_html=True)
 
     # sections
