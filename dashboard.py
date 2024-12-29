@@ -370,7 +370,7 @@ def apply_filters(df):
                 df = df[df[f['column']].isin(f['value'])]
     return df
 
-# Function to generate chart code based on user input
+
 def generate_chart_code(chart_type, df_name='df'):
     if chart_type in ["area_chart", "bar_chart", "line_chart", "scatter_chart"]:
         return f"""
