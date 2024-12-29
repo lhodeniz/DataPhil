@@ -372,7 +372,7 @@ def apply_filters(df):
 
 # Function to generate chart code based on user input
 def generate_chart_code(chart_type, df_name='df'):
-    if chart_type in ["area_chart", "bar_chart", "line_chart"]:
+    if chart_type in ["area_chart", "bar_chart", "line_chart", "scatter_chart"]:
         return f"""
         st.{chart_type}(
             data={df_name},
@@ -386,17 +386,7 @@ def generate_chart_code(chart_type, df_name='df'):
             use_container_width=True
         )
         """
-    elif chart_type == "scatter_chart":
-        return f"""
-        import altair as alt
 
-        scatter_plot = alt.Chart({df_name}).mark_point().encode(
-            x='x_column',
-            y='y_column',
-            color='color_column'
-        )
-        st.altair_chart(scatter_plot, use_container_width=True)
-        """
     elif chart_type == "map":
         return f"""
         st.map(
