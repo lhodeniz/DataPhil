@@ -609,6 +609,21 @@ def generate_chart_code(chart_type, df_name='df'):
         )
         st.plotly_chart(fig, use_container_width=True)
         """
+    elif chart_type == "table":
+        return f"""
+        # Grouping and Aggregating Data
+        grouped_df = {df_name}.groupby(['column1', 'column2'], as_index=False).agg(
+            {{
+                'column3': 'sum',  # Sum of column3
+                'column4': 'mean'  # Mean of column4
+            }}
+        )
+        # Sorting and Selecting Top Rows
+        sorted_df = grouped_df.sort_values(by='column3', ascending=False).head(10)
+
+        # Display the Resulting DataFrame
+        st.dataframe(sorted_df)
+        """
     else:
         return f"""
         # The chart type '{chart_type}' is not directly supported or requires additional customization.
@@ -787,83 +802,67 @@ def dashboard_tab():
             st.session_state.layout = {"rows": rows, "cols": cols, "cells": cell_positions}
             st.session_state.charts = {}  # Reset charts on layout change
 
-        # Allow the user to select available dataframes
-        available_dfs = ['df']  # Start with 'df' as an option
-
-        if 'saved_results' in st.session_state and isinstance(st.session_state.saved_results, dict):
-            available_dfs.extend(list(st.session_state.saved_results.keys()))
-
-        if available_dfs:
-            selected_df = st.selectbox("Select a dataframe", available_dfs)
-
-            # Use the selected dataframe
-            if selected_df == 'df':
-                df = st.session_state.df
-            elif selected_df in st.session_state.saved_results:
-                df = st.session_state.saved_results[selected_df]
-            else:
-                st.error(f"The selected dataframe '{selected_df}' is not available in session state.")
-                st.stop()
-
-            st.dataframe(df.head())
-            st.session_state.selected_df = df
+        df = st.session_state.df
+        st.dataframe(df.head())
+        st.session_state.selected_df = df
 
 
-            # List of available chart types
-            chart_list = [
-                "area_chart", 
-                "bar_chart", 
-                "line_chart", 
-                "scatter_chart", 
-                "map", 
-                "pie_chart", 
-                "histogram", 
-                "box_plot", 
-                "heatmap", 
-                "violin_chart", 
-                "bubble_chart", 
-                "sunburst_chart", 
-                "treemap", 
-                "streamgraph", 
-                "candlestick_chart", 
-                "radar_chart", 
-                "wordcloud", 
-                "timeline_chart", 
-                "density_chart", 
-                "gauge_chart", 
-                "kpi_card"
-            ]
+        # List of available chart types
+        chart_list = [
+            "area_chart", 
+            "bar_chart", 
+            "line_chart", 
+            "scatter_chart", 
+            "map", 
+            "pie_chart", 
+            "histogram", 
+            "box_plot", 
+            "heatmap", 
+            "violin_chart", 
+            "bubble_chart", 
+            "sunburst_chart", 
+            "treemap", 
+            "streamgraph", 
+            "candlestick_chart", 
+            "radar_chart", 
+            "wordcloud", 
+            "timeline_chart", 
+            "density_chart", 
+            "gauge_chart", 
+            "kpi_card" ,
+            "table"
+        ]
 
 
-            # Let the user select the chart type
-            selected_chart = st.selectbox("Select a chart type", chart_list)
+        # Let the user select the chart type
+        selected_chart = st.selectbox("Select a chart type", chart_list)
 
-            # Display sample code for the selected chart type
-            if selected_chart:
-                sample_code = generate_chart_code(selected_chart)
-                st.code(sample_code, language='python')
+        # Display sample code for the selected chart type
+        if selected_chart:
+            sample_code = generate_chart_code(selected_chart)
+            st.code(sample_code, language='python')
 
-            # Let the user input their own code
-            user_code = st.text_area("Enter your custom code for the chart:", height=200)
+        # Let the user input their own code
+        user_code = st.text_area("Enter your custom code for the chart:", height=200)
 
-            # Ask for chart title and axis labels
-            chart_title = st.text_input("Chart title")
+        # Ask for chart title and axis labels
+        chart_title = st.text_input("Chart title")
 
-            # Let the user select the cell position
-            selected_cell = st.selectbox("Select cell position", st.session_state.layout["cells"])
+        # Let the user select the cell position
+        selected_cell = st.selectbox("Select cell position", st.session_state.layout["cells"])
 
-            # Create the chart when the user clicks a button
-            if st.button("Create Chart"):
-                st.session_state.charts[selected_cell] = {
-                    "type": "custom",
-                    "code": user_code,
-                    "title": chart_title,
-                    "data": df  # Store the actual dataframe snapshot
-                }
-                st.success(f"Chart created and placed in cell {selected_cell}")
+        # Create the chart when the user clicks a button
+        if st.button("Create Chart"):
+            st.session_state.charts[selected_cell] = {
+                "type": "custom",
+                "code": user_code,
+                "title": chart_title,
+                "data": df  # Store the actual dataframe snapshot
+            }
+            st.success(f"Chart created and placed in cell {selected_cell}")
 
-            # Display the dashboard
-            dashboard()
+        # Display the dashboard
+        dashboard()
 def dashboard():
     with st.sidebar:
         df = st.session_state.selected_df
