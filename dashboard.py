@@ -997,6 +997,22 @@ def dashboard_tab():
 
         df = st.session_state.df
         st.dataframe(df.head(5))
+        st.markdown(
+            """
+            <div style="
+                background-color: green;
+                color: white;
+                padding: 10px;
+                border-radius: 5px;
+                text-align: center;
+                margin-bottom: 20px;
+            ">
+<strong>⚠️Warning:</strong> Before creating any chart, try to <B style="color: black;">aggregate</B>, <B style="color: black;">filter</B>, or create a <B style="color: black;">table</B> to ensure you are not displaying the whole DataFrame. Displaying the entire dataset will slow down the page and the app!            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
 
         st.session_state.selected_df = df
 
