@@ -334,7 +334,6 @@ def export():
         st.session_state.json_file = json_file
         settings_json = json_file.getvalue().decode("utf-8")
         import_settings(settings_json)
-        st.success("Settings imported successfully!")
 
 
     # Ensure the dataframe is not empty
