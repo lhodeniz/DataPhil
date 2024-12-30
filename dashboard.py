@@ -506,7 +506,7 @@ def upload_dataset():
                 )
     with tab3:
         # Supported file formats
-        supported_formats = ["xls", "xlsx", "xlt", "ods", "tsc", "sas7bdat", "sav", "mat", "rdata", "table"]
+        supported_formats = ["xls", "xlsx", "xlt", "ods", "tsv", "sas7bdat", "sav", "mat", "rdata", "table"]
 
         # Streamlit file uploader
         uploaded_files = st.file_uploader(
@@ -545,6 +545,7 @@ def upload_dataset():
                     st.warning("No valid files to process.")
             else:
                 st.warning("Please upload some files first.")
+
 
 
 def add_filter():
@@ -1257,7 +1258,7 @@ def convert_to_dataframe(file, file_type):
         df = pd.read_excel(file)
     elif file_type == "ods":
         df = pd.read_excel(file, engine="odf")
-    elif file_type == "tsc":
+    elif file_type == "tsv":
         df = pd.read_csv(file, sep="\t")
     elif file_type == "sas7bdat":
         import sas7bdat
