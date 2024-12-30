@@ -236,7 +236,7 @@ def fix():
 def new_columns():
     restore_backup()
 
-    tab1, tab2 = st.tabs(["Add New Columns", "Delete Columns"])
+    tab1, tab2, tab3 = st.tabs(["Add New Columns", "Delete Columns", "Rename Columns"])
 
     with tab1:
         # Add a new column
@@ -296,6 +296,33 @@ def new_columns():
                     st.warning("No columns selected for deletion.")
      else:
             st.info("No new columns available for deletion.")
+
+    with tab3:
+        # Rename columns
+        # Get list of current column names
+        current_columns = st.session_state.df.columns.tolist()
+        
+        # Select column to rename
+        column_to_rename = st.selectbox("Select column to rename:", current_columns)
+        
+        # Enter new column name
+        new_column_name = st.text_input("Enter new column name:", key="new_column_name")
+        
+        # Save button
+        if st.button("Save", key="rename_column_bt"):
+            if new_column_name and column_to_rename != new_column_name:
+                try:
+                    st.session_state.df = st.session_state.df.rename(columns={column_to_rename: new_column_name})
+                    st.success(f"Column '{column_to_rename}' renamed to '{new_column_name}'")
+                    backup_df()
+                except Exception as e:
+                    st.error(f"Error renaming column: {str(e)}")
+            else:
+                st.warning("Please enter a new column name different from the current name.")
+        
+        # Display the updated dataframe
+        st.write("Updated DataFrame:")
+        st.dataframe(st.session_state.df.head())
 
 def export():
     restore_backup()
