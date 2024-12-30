@@ -5,6 +5,7 @@ import streamlit as st
 import numpy as np
 import os
 import json
+from io import StringIO
 
 # page config
 st.set_page_config(page_title="DataPhil", layout="wide")
@@ -374,9 +375,35 @@ def export():
 
 def upload_dataset():
 
-    # File uploader widget
+    # File uploader
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 
+    if uploaded_file is not None:
+        # List of possible encodings
+        encodings = [
+            'utf-8', 'utf-8-sig', 'iso-8859-1', 'latin1', 'cp1252',
+            'cp1251', 'utf-16', 'utf-16-le', 'utf-16-be'
+        ]
+        
+        df = None  # Initialize the dataframe
+        successful_encoding = None  # Track the successful encoding
+        
+        # Try reading the file with each encoding
+        for encoding in encodings:
+            try:
+                # Decode and read the CSV
+                stringio = StringIO(uploaded_file.getvalue().decode(encoding))
+                df = pd.read_csv(stringio)
+                successful_encoding = encoding
+                break  # Exit loop if successful
+            except (UnicodeDecodeError, pd.errors.ParserError):
+                continue  # Try the next encoding if this one fails
+        
+        if df is not None:
+            st.success(f"File successfully decoded using '{successful_encoding}' encoding!")
+
+        else:
+            st.error("Failed to decode the file with the attempted encodings. Please check the file's format and encoding.")
     if uploaded_file is not None:
         try:
             # Check if a new file is uploaded
