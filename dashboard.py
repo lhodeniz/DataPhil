@@ -374,7 +374,19 @@ def export():
             mime="application/json"
         )
 
-
+def read_csv_with_encodings(uploaded_file):
+    """Reads a CSV file trying multiple encodings."""
+    encodings = [
+        'utf-8', 'utf-8-sig', 'iso-8859-1', 'latin1', 'cp1252',
+        'cp1251', 'utf-16', 'utf-16-le', 'utf-16-be'
+    ]
+    for encoding in encodings:
+        try:
+            stringio = StringIO(uploaded_file.getvalue().decode(encoding))
+            return pd.read_csv(stringio), encoding
+        except (UnicodeDecodeError, pd.errors.ParserError):
+            continue
+    return None, None
 
 
 def upload_dataset():
@@ -441,41 +453,50 @@ def upload_dataset():
     with tab2:
         # File uploaders for two CSV files
         file1 = st.file_uploader("Upload first CSV file", type="csv")
-
         file2 = st.file_uploader("Upload second CSV file", type="csv")
 
         if file1 is not None and file2 is not None:
-            # Read the CSV files into pandas DataFrames
-            df1 = pd.read_csv(file1)
-            df2 = pd.read_csv(file2)
-            st.dataframe(df1.head())
-            st.dataframe(df2.head())
+            # Read the first CSV file
+            df1, encoding1 = read_csv_with_encodings(file1)
+            if df1 is None:
+                st.error("Failed to decode the first file with the attempted encodings.")
+            else:
+                st.success(f"First file successfully decoded using '{encoding1}' encoding!")
+                st.dataframe(df1.head())
 
-            # Allow user to select columns for joining
-            join_column1 = st.selectbox("Select join column from first file", df1.columns)
-            join_column2 = st.selectbox("Select join column from second file", df2.columns)
-            
-            # Allow user to select join type
-            join_type = st.selectbox("Select join type", ["inner", "outer", "left", "right"])
-            
-            # Perform the join operation
-            joined_df = pd.merge(df1, df2, left_on=join_column1, right_on=join_column2, how=join_type)
-            
-            # Display the joined DataFrame
-            st.dataframe(joined_df.head(20))
-            st.markdown(f"Rows: {joined_df.shape[0]:,}  \nColumns: {joined_df.shape[1]:,}")
-            
-            # Convert DataFrame to CSV
-            csv = joined_df.to_csv(index=False)
-            
-            # Create download button
-            st.download_button(
-                label="Download joined data as CSV",
-                data=csv,
-                file_name="joined_data.csv",
-                mime="text/csv",
-            )
+            # Read the second CSV file
+            df2, encoding2 = read_csv_with_encodings(file2)
+            if df2 is None:
+                st.error("Failed to decode the second file with the attempted encodings.")
+            else:
+                st.success(f"Second file successfully decoded using '{encoding2}' encoding!")
+                st.dataframe(df2.head())
 
+            if df1 is not None and df2 is not None:
+                # Allow user to select columns for joining
+                join_column1 = st.selectbox("Select join column from first file", df1.columns)
+                join_column2 = st.selectbox("Select join column from second file", df2.columns)
+                
+                # Allow user to select join type
+                join_type = st.selectbox("Select join type", ["inner", "outer", "left", "right"])
+                
+                # Perform the join operation
+                joined_df = pd.merge(df1, df2, left_on=join_column1, right_on=join_column2, how=join_type)
+                
+                # Display the joined DataFrame
+                st.dataframe(joined_df.head(20))
+                st.markdown(f"Rows: {joined_df.shape[0]:,}  \nColumns: {joined_df.shape[1]:,}")
+                
+                # Convert DataFrame to CSV
+                csv = joined_df.to_csv(index=False)
+                
+                # Create download button
+                st.download_button(
+                    label="Download joined data as CSV",
+                    data=csv,
+                    file_name="joined_data.csv",
+                    mime="text/csv",
+                )
 def add_filter():
     if 'filters' not in st.session_state or not isinstance(st.session_state.filters, list):
         st.session_state.filters = []
