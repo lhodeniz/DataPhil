@@ -1202,8 +1202,15 @@ def export_settings():
         'filters': st.session_state.get('filters', []),
     }
 
-    # Return the serialized JSON string
-    return json.dumps(settings)
+    # Custom JSON encoder to handle Timestamps
+    def custom_json_encoder(obj):
+        if isinstance(obj, pd.Timestamp):
+            return obj.isoformat()  # Convert to ISO 8601 string
+        raise TypeError(f"Type {type(obj)} not serializable")
+
+    # Return the serialized JSON string with the custom encoder
+    return json.dumps(settings, default=custom_json_encoder)
+
 
 def import_settings(settings_json):
     try:
