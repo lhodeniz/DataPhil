@@ -8,6 +8,13 @@ import json
 from io import StringIO
 import base64
 from io import BytesIO
+import zipfile
+import openpyxl
+import xlrd
+import odf
+import pyreadstat
+import scipy
+import pyreadr
 
 # page config
 st.set_page_config(page_title="DataPhil", layout="wide")
@@ -391,7 +398,7 @@ def read_csv_with_encodings(uploaded_file):
 
 def upload_dataset():
 
-    tab1, tab2 = st.tabs(['Single CSV', 'Join CSVs'])
+    tab1, tab2, tab3 = st.tabs(['Single CSV', 'Join CSVs', 'to CSV'])
 
     with tab1:
 
@@ -497,6 +504,49 @@ def upload_dataset():
                     file_name="joined_data.csv",
                     mime="text/csv",
                 )
+    with tab3:
+        # Supported file formats
+        supported_formats = ["xls", "xlsx", "xlt", "ods", "tsc", "sas7bdat", "sav", "mat", "rdata", "table"]
+
+        # Streamlit file uploader
+        uploaded_files = st.file_uploader(
+            "Upload files in any supported format", 
+            type=supported_formats, 
+            accept_multiple_files=True
+        )
+
+        if st.button("Convert to CSV"):
+            if uploaded_files:
+                csv_files = []
+                for file in uploaded_files:
+                    try:
+                        file_type = file.name.rsplit('.', 1)[-1].lower()
+                        df = convert_to_dataframe(file, file_type)
+                        csv_data = dataframe_to_csv(df)
+                        csv_files.append((file.name.rsplit('.', 1)[0] + '.csv', csv_data))
+                    except Exception as e:
+                        st.error(f"Failed to process {file.name}: {e}")
+
+                if csv_files:
+                    # Create a zip file containing all CSV files
+                    zip_buffer = BytesIO()
+                    with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                        for filename, data in csv_files:
+                            zip_file.writestr(filename, data)
+
+                    # Offer the zip file for download
+                    st.download_button(
+                        label="Download CSV files",
+                        data=zip_buffer.getvalue(),
+                        file_name="converted_files.zip",
+                        mime="application/zip"
+                    )
+                else:
+                    st.warning("No valid files to process.")
+            else:
+                st.warning("Please upload some files first.")
+
+
 def add_filter():
     if 'filters' not in st.session_state or not isinstance(st.session_state.filters, list):
         st.session_state.filters = []
@@ -515,7 +565,6 @@ def apply_filters(df):
             else:
                 df = df[df[f['column']].isin(f['value'])]
     return df
-
 
 def generate_chart_code(chart_type, df_name='df'):
     if chart_type in ["area_chart", "bar_chart", "line_chart", "scatter_chart"]:
@@ -776,7 +825,6 @@ def generate_chart_code(chart_type, df_name='df'):
         # Example:
         # st.write("Custom implementation for {chart_type}")
         """
-
 
 def report():
      tab1, tab2, tab3 = st.tabs(["Tables", "Filters", "Visualization"])
@@ -1119,7 +1167,6 @@ def dashboard():
                         st.error(f"Error executing custom code: {str(e)}")
                         st.error(f"Chart data: {chart_data}")
 
-
 def export_settings():
     # Convert the DataFrame to a dictionary only if it's not empty
     df_dict = st.session_state.df.to_dict(orient='split') if not st.session_state.df.empty else {}
@@ -1201,6 +1248,45 @@ def import_settings(settings_json):
     except Exception as e:
         st.error(f"Error importing settings: {e}")
 
+
+def convert_to_dataframe(file, file_type):
+    """
+    Convert the uploaded file to a pandas DataFrame based on its file type.
+    """
+    if file_type in ["xls", "xlsx", "xlt"]:
+        df = pd.read_excel(file)
+    elif file_type == "ods":
+        df = pd.read_excel(file, engine="odf")
+    elif file_type == "tsc":
+        df = pd.read_csv(file, sep="\t")
+    elif file_type == "sas7bdat":
+        import sas7bdat
+        with sas7bdat.SAS7BDAT(file) as f:
+            df = f.to_data_frame()
+    elif file_type == "sav":
+        import pyreadstat
+        df, meta = pyreadstat.read_sav(file)
+    elif file_type == "mat":
+        from scipy.io import loadmat
+        mat = loadmat(file)
+        df = pd.DataFrame({key: mat[key].flatten() for key in mat if not key.startswith("__")})
+    elif file_type == "rdata":
+        import pyreadr
+        result = pyreadr.read_r(file)
+        df = next(iter(result.values()))  # Extract the first DataFrame
+    elif file_type == "table":
+        df = pd.read_table(file)
+    else:
+        raise ValueError("Unsupported file format")
+    return df
+
+def dataframe_to_csv(dataframe):
+    """
+    Convert a DataFrame to CSV format and return as bytes.
+    """
+    csv_buffer = BytesIO()
+    dataframe.to_csv(csv_buffer, index=False)
+    return csv_buffer.getvalue()
 
 
 # Show the dashboard if toggle is active
