@@ -827,7 +827,8 @@ def dashboard_tab():
             st.session_state.charts = {}  # Reset charts on layout change
 
         df = st.session_state.df
-        st.dataframe(df.head())
+        st.dataframe(df.head(5))
+
         st.session_state.selected_df = df
 
 
@@ -861,13 +862,20 @@ def dashboard_tab():
         # Let the user select the chart type
         selected_chart = st.selectbox("Select a chart type", chart_list)
 
-        # Display sample code for the selected chart type
-        if selected_chart:
-            sample_code = generate_chart_code(selected_chart)
-            st.code(sample_code, language='python')
+        col1, col2, col3 = st.columns([3,1,3], gap="small")
+        with col1:
+            # Let the user input their own code
+            user_code = st.text_area("Enter your custom code for the chart:", height=200)
+        with col2:
+            column_types = pd.DataFrame({'Data Types': df.dtypes.astype(str)})
+            st.dataframe(column_types, width=500)
+        with col3:
+            # Display sample code for the selected chart type
+            if selected_chart:
+                sample_code = generate_chart_code(selected_chart)
+                st.code(sample_code, language='python')
 
-        # Let the user input their own code
-        user_code = st.text_area("Enter your custom code for the chart:", height=200)
+        
 
         # Ask for chart title and axis labels
         chart_title = st.text_input("Chart title")
