@@ -328,6 +328,15 @@ def new_columns():
 def export():
     restore_backup()
 
+    # File uploader for importing settings
+    json_file = st.file_uploader("Choose a settings file", type="json")
+    if json_file is not None:
+        st.session_state.json_file = json_file
+        settings_json = json_file.getvalue().decode("utf-8")
+        import_settings(settings_json)
+        st.success("Settings imported successfully!")
+
+
     # Ensure the dataframe is not empty
     if 'df' in st.session_state and not st.session_state.df.empty:
         # Check if uploaded_file exists in session state and is valid
@@ -364,13 +373,7 @@ def export():
             mime="application/json"
         )
 
-    # File uploader for importing settings
-    json_file = st.file_uploader("Choose a settings file", type="json")
-    if json_file is not None:
-        st.session_state.json_file = json_file
-        settings_json = json_file.getvalue().decode("utf-8")
-        import_settings(settings_json)
-        st.success("Settings imported successfully!")
+
 
 
 def upload_dataset():
