@@ -1019,6 +1019,7 @@ def dashboard_tab():
 
         # List of available chart types
         chart_list = [
+            "table",
             "area_chart", 
             "bar_chart", 
             "line_chart", 
@@ -1039,8 +1040,8 @@ def dashboard_tab():
             "timeline_chart", 
             "density_chart", 
             "gauge_chart", 
-            "kpi_card" ,
-            "table"
+            "kpi_card"
+            
         ]
 
 
