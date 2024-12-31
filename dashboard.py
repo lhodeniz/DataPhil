@@ -1059,21 +1059,23 @@ def dashboard_tab():
                 margin-bottom: 20px;
             ">
            <strong>⚠️Warning:</strong> Before creating any chart, try to <B style="color: black;">aggregate</B>, <B style="color: black;">filter</B>, or create a <B style="color: black;">table</B> to ensure you are not displaying the whole DataFrame. Displaying the entire dataset will slow down the page and the app!
-           <br>You can access to your created tables in "Report" section like this: tb['table_name']
-            </div>
+           </div>
             """,
             unsafe_allow_html=True
         )
 
-        tb_keys = list(st.session_state.tb.keys())
-        selected_key = st.selectbox("Select your created table", tb_keys)
+        tb = False
 
-        # Display the head of the selected key's data
-        if selected_key:
-            selected_data = st.session_state.tb[selected_key]
-            if isinstance(selected_data, pd.DataFrame):
-                st.dataframe(selected_data.head())
+        if tb:
+            tb_keys = list(st.session_state.tb.keys())
+            selected_key = st.selectbox("Select your created table", tb_keys)
 
+            # Display the head of the selected key's data
+            if selected_key:
+                selected_data = st.session_state.tb[selected_key]
+                if isinstance(selected_data, pd.DataFrame):
+                    st.dataframe(selected_data.head())
+        
         st.session_state.selected_df = df
 
 
