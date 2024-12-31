@@ -52,8 +52,8 @@ if "layout" not in st.session_state:
 if "charts" not in st.session_state:
     st.session_state.charts = {}
 
-if 'saved_results' not in st.session_state:
-    st.session_state.saved_results = {}
+if 'tb' not in st.session_state:
+    st.session_state.tb = {}
 
 if 'filters' not in st.session_state:
     st.session_state.filters = []
@@ -923,17 +923,17 @@ def report():
             save_name = st.text_input("Enter a name to save this result TABLE:")
             if st.button("Save Result", key="save_results_tables"):
                 if save_name:
-                    if 'saved_results' not in st.session_state:
-                        st.session_state.saved_results = {}
-                    st.session_state.saved_results[save_name] = result
+                    if 'tb' not in st.session_state:
+                        st.session_state.tb = {}
+                    st.session_state.tb[save_name] = result
                     st.success(f"Result saved as '{save_name}'")
                 else:
                     st.warning("Please enter a name to save the result.")
 
             # Display saved results
-            if 'saved_results' in st.session_state and st.session_state.saved_results:
+            if 'tb' in st.session_state and st.session_state.tb:
                 st.write("Saved Results:")
-                for name in st.session_state.saved_results.keys():
+                for name in st.session_state.tb.keys():
                     st.write(f"- {name}")
         else:
             st.write("Please select grouping columns and add at least one aggregation.")
@@ -941,13 +941,13 @@ def report():
      with tab2: #Filters
         restore_backup()
         # Step 1: Select dataframe
-        dataframe_options = ["Original Dataframe"] + list(st.session_state.get('saved_results', {}).keys())
+        dataframe_options = ["Original Dataframe"] + list(st.session_state.get('tb', {}).keys())
         selected_df_name = st.selectbox("Select a dataframe:", dataframe_options)
         
         if selected_df_name == "Original Dataframe":
             df = st.session_state.df
         else:
-            df = st.session_state.saved_results[selected_df_name]
+            df = st.session_state.tb[selected_df_name]
         
         # Step 2: Add filter conditions
         st.write("Add filter conditions:")
@@ -1002,17 +1002,17 @@ def report():
             save_name = st.text_input("Enter a name to save this filtered result:")
             if st.button("Save Filtered Result", key="save_filters"):
                 if save_name:
-                    if 'saved_results' not in st.session_state:
-                        st.session_state.saved_results = {}
-                    st.session_state.saved_results[save_name] = st.session_state.filtered_df
+                    if 'tb' not in st.session_state:
+                        st.session_state.tb = {}
+                    st.session_state.tb[save_name] = st.session_state.filtered_df
                     st.success(f"Filtered result saved as '{save_name}'")
                 else:
                     st.warning("Please enter a name to save the filtered result.")
 
         # Display saved results
-        if 'saved_results' in st.session_state and st.session_state.saved_results:
+        if 'tb' in st.session_state and st.session_state.tb:
             st.write("Saved Results:")
-            for name in st.session_state.saved_results.keys():
+            for name in st.session_state.tb.keys():
                 st.write(f"- {name}")
 
      with tab3: #Visualization
@@ -1029,6 +1029,9 @@ def report():
 def dashboard_tab():
 
         restore_backup()
+        # Check for saved results
+        st.session_state.tb = st.session_state.get('tb', {})
+        tb = pd.DataFrame(st.session_state.tb.items(), columns=['Key', 'Value'])
 
         with st.container(border = True):
             # Let the user define the dashboard layout
@@ -1055,12 +1058,21 @@ def dashboard_tab():
                 text-align: center;
                 margin-bottom: 20px;
             ">
-<strong>⚠️Warning:</strong> Before creating any chart, try to <B style="color: black;">aggregate</B>, <B style="color: black;">filter</B>, or create a <B style="color: black;">table</B> to ensure you are not displaying the whole DataFrame. Displaying the entire dataset will slow down the page and the app!            </div>
+           <strong>⚠️Warning:</strong> Before creating any chart, try to <B style="color: black;">aggregate</B>, <B style="color: black;">filter</B>, or create a <B style="color: black;">table</B> to ensure you are not displaying the whole DataFrame. Displaying the entire dataset will slow down the page and the app!
+           <br>You can access to your created tables in "Report" section like this: tb['table_name']
+            </div>
             """,
             unsafe_allow_html=True
         )
 
+        tb_keys = list(st.session_state.tb.keys())
+        selected_key = st.selectbox("Select your created table", tb_keys)
 
+        # Display the head of the selected key's data
+        if selected_key:
+            selected_data = st.session_state.tb[selected_key]
+            if isinstance(selected_data, pd.DataFrame):
+                st.dataframe(selected_data.head())
 
         st.session_state.selected_df = df
 
@@ -1126,6 +1138,7 @@ def dashboard_tab():
                 "data": df  # Store the actual dataframe snapshot
             }
             st.success(f"Chart created and placed in cell {selected_cell}")
+
 
         # Display the dashboard
         dashboard()
@@ -1228,7 +1241,7 @@ def dashboard():
                     st.subheader(chart_data["title"])
                     try:
                         # Execute the custom code with the saved dataframe
-                        exec(chart_data["code"], {"df": df, "st": st})
+                        exec(chart_data["code"], {"df": df, "tb": st.session_state.tb, "st": st})
                     except Exception as e:
                         st.error(f"Error executing custom code: {str(e)}")
                         st.error(f"Chart data: {chart_data}")
