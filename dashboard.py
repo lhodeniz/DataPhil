@@ -16,6 +16,7 @@ import pyreadstat
 import scipy
 import pyreadr
 
+
 # page config
 st.set_page_config(page_title="DataPhil", layout="wide")
 
@@ -61,9 +62,21 @@ if 'filters' not in st.session_state:
 if 'json_file' not in st.session_state:
     st.session_state.uploaded_file = None
 
+if 'custom_functions' not in st.session_state:
+  st.session_state.custom_functions = pd.DataFrame({'Name': [], 'Code': []}, index=pd.RangeIndex(start=0, name='index'))
 
+if 'show_dialog' not in st.session_state:
+    st.session_state.show_dialog = False
+
+if 'compiled_functions' not in st.session_state:
+    st.session_state.compiled_functions = {}
 
 # backup of session
+def open_dialog():
+    st.session_state.show_dialog = True
+
+
+
 def backup_df():
     if 'df_backup' not in st.session_state or not st.session_state.df_backup.equals(st.session_state.df):
         st.session_state.df_backup = st.session_state.df.copy()
@@ -253,6 +266,47 @@ def new_columns():
         new_col_name = st.text_input("Enter new column name:")
         new_col_value = st.text_input("Enter value or formula (use df['column_name'] for existing columns):")
 
+        @st.dialog("Custom Functions Editor")
+        def custom_functions_dialog():
+            st.write("You can use custom functions in creating new columns like: df['column'].apply(custom_function)")
+            st.write('''```def double(x): return x * 2 ```''')
+            # Use data editor for managing custom functions
+            edited_df = st.data_editor(
+                st.session_state.custom_functions,
+                num_rows="dynamic",
+                use_container_width=True,
+                column_config={
+                    "_index": st.column_config.NumberColumn("index", step=1)
+                }
+            )
+            
+            # Save button
+            if st.button("Save Changes"):
+                # Convert Code strings into executable functions
+                compiled_functions = {}
+                for _, row in edited_df.iterrows():
+                    try:
+                        exec(row['Code'], globals(), compiled_functions)
+                        st.session_state.compiled_functions[row['Name']] = compiled_functions[row['Name']]
+                    except Exception as e:
+                        st.error(f"Error compiling function '{row['Name']}': {e}")
+                st.session_state.custom_functions = edited_df
+                st.success("Custom functions saved successfully!")
+
+        # Create a clickable text to open the dialog
+        if st.button("Custom Functions", on_click=open_dialog):
+            pass
+
+        # Only show the dialog if the state is True
+        if st.session_state.show_dialog:
+            custom_functions_dialog()
+            # Reset the state after showing the dialog
+            st.session_state.show_dialog = False
+
+
+
+
+
         if st.button("Add new column", key="add_new_column_bt"):
             if new_col_name and new_col_value:
                 st.session_state.new_columns.append((new_col_name, new_col_value))
@@ -266,7 +320,8 @@ def new_columns():
             error_columns = []
             for col_name, col_value in st.session_state.new_columns:
                 try:
-                    st.session_state.df[col_name] = eval(col_value, {'df': st.session_state.df, 'pd': pd, 'np': np})
+                    st.session_state.df[col_name] = eval(col_value,{'df': st.session_state.df, 'pd': pd, 'np': np, **st.session_state.compiled_functions})
+                   
                     success_columns.append(col_name)
                 except Exception as e:
                     error_columns.append((col_name, str(e)))
