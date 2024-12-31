@@ -61,9 +61,25 @@ if 'filters' not in st.session_state:
 if 'json_file' not in st.session_state:
     st.session_state.uploaded_file = None
 
+if 'custom_functions' not in st.session_state:
+    st.session_state.custom_functions = {}
+
+def add_or_update_function():
+    func_name = st.session_state.function_name
+    func_code = st.session_state.function_code
+    if func_name and func_code:
+        st.session_state.custom_functions[func_name] = func_code
+        st.success(f"Function '{func_name}' added/updated successfully!")
+
+# Function to remove a custom function
+def remove_function():
+    func_name = st.session_state.function_to_remove
+    if func_name in st.session_state.custom_functions:
+        del st.session_state.custom_functions[func_name]
+        st.success(f"Function '{func_name}' removed successfully!")
 
 
-# backup of session
+
 def backup_df():
     if 'df_backup' not in st.session_state or not st.session_state.df_backup.equals(st.session_state.df):
         st.session_state.df_backup = st.session_state.df.copy()
@@ -249,6 +265,24 @@ def new_columns():
     tab1, tab2, tab3 = st.tabs(["Add New Columns", "Delete Columns", "Rename Columns"])
 
     with tab1:
+        # Sidebar for managing functions
+        with st.sidebar:
+            st.header("Manage Custom Functions")
+            
+            # Add/Edit function
+            st.subheader("Add/Edit Function")
+            st.text_input("Function Name", key="function_name")
+            st.text_area("Function Code", key="function_code")
+            st.button("Save Function", on_click=add_or_update_function)
+            
+            # Remove function
+            st.subheader("Remove Function")
+            func_to_remove = st.selectbox("Select function to remove", 
+                                          options=list(st.session_state.custom_functions.keys()),
+                                          key="function_to_remove")
+            st.button("Remove Function", on_click=remove_function)
+
+
         # Add a new column
         new_col_name = st.text_input("Enter new column name:")
         new_col_value = st.text_input("Enter value or formula (use df['column_name'] for existing columns):")
@@ -264,9 +298,24 @@ def new_columns():
         if st.button("Apply Changes", key="apply_changes_new_columns_bt"):
             success_columns = []
             error_columns = []
+            
+            # Create a local namespace with custom functions
+            local_namespace = {
+                'df': st.session_state.df,
+                'pd': pd,
+                'np': np
+            }
+            
+            # Add custom functions to the local namespace
+            for func_name, func_code in st.session_state.custom_functions.items():
+                try:
+                    exec(func_code, local_namespace)
+                except Exception as e:
+                    st.error(f"Error loading custom function '{func_name}': {str(e)}")
+            
             for col_name, col_value in st.session_state.new_columns:
                 try:
-                    st.session_state.df[col_name] = eval(col_value, {'df': st.session_state.df, 'pd': pd, 'np': np})
+                    st.session_state.df[col_name] = eval(col_value, local_namespace)
                     success_columns.append(col_name)
                 except Exception as e:
                     error_columns.append((col_name, str(e)))
@@ -284,7 +333,6 @@ def new_columns():
         st.write("Updated DataFrame:")
         st.dataframe(st.session_state.df.head())
         backup_df()
-
 
     with tab2:
 
