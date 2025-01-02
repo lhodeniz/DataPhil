@@ -15,6 +15,7 @@ import odf
 import pyreadstat
 import scipy
 import pyreadr
+import seaborn as sns 
 
 # page config
 st.set_page_config(page_title="DataPhil", layout="wide")
