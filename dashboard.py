@@ -20,7 +20,7 @@ import seaborn as sns
 # page config
 st.set_page_config(page_title="DataPhil", layout="wide")
 
-show_only_dashboard = st.toggle("Show Only Dashboard")
+dashboard_choice = st.radio("Select Dashboard", ["None", "TUI", "GUI"], horizontal = True)
 
 
 # initializations
@@ -64,6 +64,12 @@ if 'json_file' not in st.session_state:
 
 if 'custom_functions' not in st.session_state:
     st.session_state.custom_functions = {}
+
+
+if "custom_title" not in st.session_state:
+    st.session_state.custom_title="Dashboard"
+
+
 
 def add_or_update_function():
     func_name = st.session_state.function_name
@@ -1028,11 +1034,15 @@ def report():
             components.html(pyg_html, height=1000)
 
 def dashboard_tab():
+    tab1, tab2 = st.tabs(['TUI', 'GUI'])
+
+    with tab1:#TUI
 
         restore_backup()
         # Check for saved results
         st.session_state.tb = st.session_state.get('tb', {})
         tb = pd.DataFrame(st.session_state.tb.items(), columns=['Key', 'Value'])
+        st.session_state.custom_title = st.text_input("Enter dashboard title:", "Dashboard", key = "tui_title")
 
         with st.container(border = True):
             # Let the user define the dashboard layout
@@ -1144,15 +1154,183 @@ def dashboard_tab():
 
 
         # Display the dashboard
-        dashboard()
+        dashboard_tui()
 
-def dashboard():
+    with tab2: #GUI
+
+        restore_backup()
+        # Check for saved results
+        st.session_state.tb = st.session_state.get('tb', {})
+        tb = pd.DataFrame(st.session_state.tb.items(), columns=['Key', 'Value'])
+        st.session_state.custom_title = st.text_input("Enter dashboard title:", "Dashboard", key = "gui_title")
+
+        with st.container(border = True):
+            # Let the user define the dashboard layout
+            rows = st.number_input("Number of rows", min_value=1, value=2, key='rows_gui')
+            cols = st.number_input("Number of columns", min_value=1, value=2, key='cols_gui')
+
+        # Create a list of cell positions
+        cell_positions = [f"{i+1}-{j+1}" for i in range(rows) for j in range(cols)]
+
+        # Store the layout in session state
+        if "layout" not in st.session_state or st.session_state.layout != {"rows": rows, "cols": cols, "cells": cell_positions}:
+            st.session_state.layout = {"rows": rows, "cols": cols, "cells": cell_positions}
+            st.session_state.charts = {}  # Reset charts on layout change
+
+        df = st.session_state.df
+        st.dataframe(df.head(5))
+
+        # Chart Type Selection
+        chart_type = st.selectbox(
+            "Select the type of chart you want to create",
+            [
+                "Area Chart", "Bar Chart", "Line Chart", "Scatter Chart",
+                "Map", "Pie Chart", "Histogram", "Box Plot", "Heatmap",
+                "Violin Chart", "Bubble Chart", "Sunburst Chart", "Treemap",
+                "Streamgraph", "Candlestick Chart", "Radar Chart", "WordCloud",
+                "Timeline Chart", "Density Chart", "Gauge Chart", "KPI Card"
+            ]
+        )
+
+        # Dynamic Chart Creation
+        if chart_type == "Area Chart":
+            x = st.selectbox("X",df.columns)
+            y = st.selectbox("Y", df.columns)
+            color = st.selectbox("Color", [None]+list(df.columns) )
+            x_label = st.text_input("X_label", value="", max_chars=None)
+            y_label = st.text_input("Y_lable", value="", max_chars=None)
+            width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
+            height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
+            use_container_width = st.checkbox("use container width", value=True)
+            # user code
+            user_code = f'''st.area_chart(
+                data = {df},
+                x = {x},
+                y = {y},
+                color = {color},
+                x_label = {x_label},
+                y_label = {y_label},
+                width = {width},
+                height = {height},
+                user_container_width = {use_container_width}
+             )
+
+            '''
+
+        if chart_type == "Bar Chart":
+            x = st.selectbox("X",df.columns)
+            y = st.selectbox("Y", df.columns)
+            color = st.selectbox("Color", [None]+list(df.columns) )
+            x_label = st.text_input("X_label", value="", max_chars=None)
+            y_label = st.text_input("Y_lable", value="", max_chars=None)
+            width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
+            height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
+            use_container_width = st.checkbox("use container width", value=True)
+            # user code
+            user_code = f'''st.bar_chart(
+                data = {df},
+                x = {x},
+                y = {y},
+                color = {color},
+                x_label = {x_label},
+                y_label = {y_label},
+                width = {width},
+                height = {height},
+                use_container_width = {use_container_width}
+             )'''
+
+        if chart_type == "Line Chart":
+            x = st.selectbox("X",df.columns)
+            y = st.selectbox("Y", df.columns)
+            color = st.selectbox("Color", [None]+list(df.columns) )
+            x_label = st.text_input("X_label", value="", max_chars=None)
+            y_label = st.text_input("Y_lable", value="", max_chars=None)
+            width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
+            height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
+            use_container_width = st.checkbox("use container width", value=True)
+            # user code
+            user_code = f"""st.line_chart(
+                data=df,
+                x={repr(x)},
+                y={repr(y)},
+                color={repr(color)},
+                x_label={repr(x_label)},
+                y_label={repr(y_label)},
+                width={width},
+                height={height},
+                use_container_width={use_container_width}
+            )"""
+
+
+
+        if chart_type == "Scatter Chart":
+            x = st.selectbox("X",df.columns)
+            y = st.selectbox("Y", df.columns)
+            color = st.selectbox("Color", [None]+list(df.columns) )
+            x_label = st.text_input("X_label", value="", max_chars=None)
+            y_label = st.text_input("Y_lable", value="", max_chars=None)
+            width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
+            height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
+            use_container_width = st.checkbox("use container width", value=True)
+            # user code
+            user_code = f'''st.scatter_chart(
+                data = {df},
+                x = {x},
+                y = {y},
+                color = {color},
+                x_label = {x_label},
+                y_label = {y_label},
+                width = {width},
+                height = {height},
+                use_container_width = {use_container_width}
+             )
+
+            '''      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # Let the user select the cell position
+        selected_cell = st.selectbox("Select cell position", st.session_state.layout["cells"], key='select_cell_gui')
+
+        # Create the chart when the user clicks a button
+        if st.button("Create Chart", key='create_chart_gui'):
+            st.session_state.charts[selected_cell] = {
+                "type": "custom",
+                "code": user_code,
+                "title": chart_title,
+                "data": df  # Store the actual dataframe snapshot
+            }
+            st.success(f"Chart created and placed in cell {selected_cell}")
+
+
+        # Display the dashboard
+        dashboard_gui()
+
+
+
+
+def dashboard_tui():
     with st.sidebar:
         df = st.session_state.selected_df
         st.write("Dashboard Filters")
          
         # Button to add a new filter
-        st.button("Add Filter", on_click=add_filter)
+        st.button("Add Filter", on_click=add_filter, key="tui_filters")
 
         # Display and configure each filter
         for i, filter in enumerate(st.session_state.get('filters', [])):
@@ -1203,7 +1381,7 @@ def dashboard():
                             st.write(f"{len(selected_values)} option(s) selected.")
                 with col3:
                     st.button("Remove", key=f"remove_{i}", on_click=remove_filter, args=(i,))
-        if st.button("Update Dashboard"):
+        if st.button("Update Dashboard", key = "tui_update"):
             df = apply_filters(df)
 
 
@@ -1213,14 +1391,14 @@ def dashboard():
         st.error("Dashboard layout is not configured. Please set it up first.")
         return
 
-    # Allow user to enter a custom title only if the toggle is off
-    if not show_only_dashboard:
-        custom_title = st.text_input("Enter dashboard title:", "Dashboard")
-        st.session_state.custom_dashboard_title = custom_title
+    
+    
+    
+    st.session_state.custom_dashboard_title = st.session_state.custom_title
 
-    else:
-        # Retrieve the stored title from session state, or default to "Dashboard"
-        custom_title = st.session_state.get("custom_dashboard_title", "Dashboard")
+    
+    
+    custom_title = st.session_state.get("custom_dashboard_title", "Dashboard")
     
     # Display the dashboard with custom title
     # Center and display the title
@@ -1248,6 +1426,110 @@ def dashboard():
                     except Exception as e:
                         st.error(f"Error executing custom code: {str(e)}")
                         st.error(f"Chart data: {chart_data}")
+
+def dashboard_gui():
+    with st.sidebar:
+        df = st.session_state.selected_df
+        st.write("Dashboard Filters")
+         
+        # Button to add a new filter
+        st.button("Add Filter", on_click=add_filter, key="gui_filters")
+
+        # Display and configure each filter
+        for i, filter in enumerate(st.session_state.get('filters', [])):
+            with st.expander(f"Filter {i+1}", expanded=True):
+                col1, col2, col3 = st.columns([2,2,1])
+                
+                with col1:
+                    filter['column'] = st.selectbox("Select Column", df.columns, key=f"col_{i}")
+                
+                with col2:
+                    if filter['column']:
+                        if pd.api.types.is_numeric_dtype(df[filter['column']]):
+                            min_val, max_val = float(df[filter['column']].min()), float(df[filter['column']].max())
+                            
+                            # Use separate number inputs without columns
+                            start_value = st.number_input(f"Start value for {filter['column']}", 
+                                                          value=min_val, 
+                                                          min_value=min_val, 
+                                                          max_value=max_val, 
+                                                          key=f"start_{i}")
+                            
+                            end_value = st.number_input(f"End value for {filter['column']}", 
+                                                        value=max_val, 
+                                                        min_value=min_val, 
+                                                        max_value=max_val, 
+                                                        key=f"end_{i}")
+                            
+                            # Use the input values for the slider
+                            filter['value'] = st.slider("Select Range", 
+                                                        min_value=min_val, 
+                                                        max_value=max_val, 
+                                                        value=(start_value, end_value), 
+                                                        key=f"val_{i}")
+                        else:
+                            options = df[filter['column']].unique().tolist()
+                            
+                            # Use multiselect for both search and selection
+                            selected_values = st.multiselect(
+                                f"Select values for {filter['column']}",
+                                options=options,
+                                default=options if st.checkbox("Select All", key=f"select_all_{i}") else [],
+                                key=f"multiselect_{i}"
+                            )
+                            
+                            filter['value'] = selected_values
+
+                            # Show how many options are selected
+                            st.write(f"{len(selected_values)} option(s) selected.")
+                with col3:
+                    st.button("Remove", key=f"remove_{i}", on_click=remove_filter, args=(i,))
+        if st.button("Update Dashboard", key="gui_update"):
+            df = apply_filters(df)
+
+
+
+
+    if "rows" not in st.session_state.layout or "cols" not in st.session_state.layout:
+        st.error("Dashboard layout is not configured. Please set it up first.")
+        return
+
+    
+    
+    
+    st.session_state.custom_dashboard_title = st.session_state.custom_title
+
+    
+    
+    custom_title = st.session_state.get("custom_dashboard_title", "Dashboard")
+    
+    # Display the dashboard with custom title
+    # Center and display the title
+    st.markdown(
+        f"""
+        <h1 style="text-align: center; margin-top: 0px;">
+            {custom_title}
+        </h1>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+    for i in range(st.session_state.layout["rows"]):
+        cols = st.columns(st.session_state.layout["cols"])
+        for j, col in enumerate(cols):
+            cell = f"{i+1}-{j+1}"
+            if cell in st.session_state.charts:
+                chart_data = st.session_state.charts[cell]
+                with col:
+                    st.subheader(chart_data["title"])
+                    try:
+                        # Execute the custom code with the saved dataframe
+                        exec(chart_data["code"], {"df": df, "tb": st.session_state.tb, "st": st})
+                    except Exception as e:
+                        st.error(f"Error executing custom code: {str(e)}")
+                        st.error(f"Chart data: {chart_data}")
+
 
 def export_settings():
     # Convert the DataFrame to a dictionary only if it's not empty
@@ -1379,8 +1661,10 @@ def dataframe_to_csv(dataframe):
 
 
 # Show the dashboard if toggle is active
-if show_only_dashboard:
-    dashboard()
+if dashboard_choice == "TUI":
+    dashboard_tui()
+elif dashboard_choice == "GUI":
+    dashboard_gui()
 else:
     # header
     st.markdown("<h2 style='text-align: center;'>Welcome to DataPhil!👋</h2>",
