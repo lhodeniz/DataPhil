@@ -1327,7 +1327,7 @@ def dashboard_tab():
 def dashboard_tui():
     with st.sidebar:
         df = st.session_state.selected_df
-        st.write("Dashboard Filters")
+        st.write("TUI Filters")
          
         # Button to add a new filter
         st.button("Add Filter", on_click=add_filter, key="tui_filters")
@@ -1381,7 +1381,7 @@ def dashboard_tui():
                             st.write(f"{len(selected_values)} option(s) selected.")
                 with col3:
                     st.button("Remove", key=f"remove_{i}", on_click=remove_filter, args=(i,))
-        if st.button("Update Dashboard", key = "tui_update"):
+        if st.button("Update TUI Dashboard", key = "tui_update"):
             df = apply_filters(df)
 
 
@@ -1430,7 +1430,7 @@ def dashboard_tui():
 def dashboard_gui():
     with st.sidebar:
         df = st.session_state.selected_df
-        st.write("Dashboard Filters")
+        st.write("GUI Filters")
          
         # Button to add a new filter
         st.button("Add Filter", on_click=add_filter, key="gui_filters")
@@ -1484,7 +1484,7 @@ def dashboard_gui():
                             st.write(f"{len(selected_values)} option(s) selected.")
                 with col3:
                     st.button("Remove", key=f"remove_{i}", on_click=remove_filter, args=(i,))
-        if st.button("Update Dashboard", key="gui_update"):
+        if st.button("Update GUI Dashboard", key="gui_update"):
             df = apply_filters(df)
 
 
