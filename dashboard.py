@@ -1204,15 +1204,15 @@ def dashboard_tab():
             use_container_width = st.checkbox("use container width", value=True)
             # user code
             user_code = f'''st.area_chart(
-                data = {df},
-                x = {x},
-                y = {y},
-                color = {color},
-                x_label = {x_label},
-                y_label = {y_label},
+                data = df,
+                x = {repr(x)},
+                y = {repr(y)},
+                color = {repr(color)},
+                x_label = {repr(x_label)},
+                y_label = {repr(y_label)},
                 width = {width},
                 height = {height},
-                user_container_width = {use_container_width}
+                use_container_width = {use_container_width}
              )
 
             '''
@@ -1228,12 +1228,12 @@ def dashboard_tab():
             use_container_width = st.checkbox("use container width", value=True)
             # user code
             user_code = f'''st.bar_chart(
-                data = {df},
-                x = {x},
-                y = {y},
-                color = {color},
-                x_label = {x_label},
-                y_label = {y_label},
+                data = df,
+                x = {repr(x)},
+                y = {repr(y)},
+                color = {repr(color)},
+                x_label = {repr(x_label)},
+                y_label = {repr(y_label)},
                 width = {width},
                 height = {height},
                 use_container_width = {use_container_width}
@@ -1274,12 +1274,12 @@ def dashboard_tab():
             use_container_width = st.checkbox("use container width", value=True)
             # user code
             user_code = f'''st.scatter_chart(
-                data = {df},
-                x = {x},
-                y = {y},
-                color = {color},
-                x_label = {x_label},
-                y_label = {y_label},
+                data = df,
+                x = {repr(x)},
+                y = {repr(y)},
+                color = {repr(color)},
+                x_label = {repr(x_label)},
+                y_label = {repr(y_label)},
                 width = {width},
                 height = {height},
                 use_container_width = {use_container_width}
