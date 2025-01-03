@@ -19,6 +19,10 @@ import seaborn as sns
 import plotly.express as px
 import textwrap
 import matplotlib.pyplot as plt
+import altair as alt
+import datetime
+import plotly.graph_objects as go
+from wordcloud import WordCloud
 
 
 # page config
@@ -1382,6 +1386,266 @@ def dashboard_tab():
                 st.plotly_chart(fig, use_container_width=True)
                 """)
 
+        if chart_type == "Bubble Chart":
+
+            # Column selection
+            x_column = st.selectbox("x-axis column", df.columns.tolist())
+            y_column = st.selectbox("y-axis column", df.columns.tolist())
+            size_column = st.selectbox("bubble size column", df.columns.tolist())
+            color_column = st.selectbox("color column", df.columns.tolist())
+            hover_column = st.selectbox("hover data column", df.columns.tolist())
+
+            user_code = textwrap.dedent(f"""
+                fig = px.scatter(
+                    df,
+                    x={repr(x_column)},
+                    y={repr(y_column)},
+                    size={repr(size_column)},
+                    color={repr(color_column)},
+                    hover_name={repr(hover_column)}
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                """)
+
+        if chart_type == "Sunburst Chart":
+            # Column selection
+            all_columns = df.columns.tolist()
+            path_columns = st.multiselect("Select hierarchical category columns (in order)", all_columns, max_selections=3)
+            value_column = st.selectbox("Select the value column", all_columns)
+
+            user_code = textwrap.dedent(f"""
+            if {repr(path_columns)} and {repr(value_column)}:
+                fig = px.sunburst(
+                    df,
+                    path={repr(path_columns)},
+                    values={repr(value_column)},
+                    
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.error("Please select at least one path column and a value column.")
+            """)
+
+
+        if chart_type == "Treemap":
+            # Column selection
+            all_columns = df.columns.tolist()
+            path_columns = st.multiselect("Select hierarchical category columns (in order)", all_columns, max_selections=3)
+            value_column = st.selectbox("Select the value column", all_columns)
+
+            user_code = textwrap.dedent(f"""
+                if {repr(path_columns)} and {repr(value_column)}:
+                    fig = px.treemap(
+                        df,
+                        path={repr(path_columns)},
+                        values={repr(value_column)},
+
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.error("Please select at least one path column and a value column.")
+                """)
+
+
+        if chart_type == "Streamgraph":
+            # Column selection
+            x_column = st.selectbox("Select the x-axis column (e.g., time)", df.columns.tolist())
+            y_column = st.selectbox("Select the y-axis column (numerical data)", df.columns.tolist())
+            category_column = st.selectbox("Select the category column", df.columns.tolist())
+
+            # Plot customization
+            color_scheme = st.selectbox("Select color scheme", ["category10", "category20", "tableau10", "tableau20"])
+
+            user_code = textwrap.dedent(f"""
+                streamgraph = alt.Chart(df).mark_area().encode(
+                    x={repr(x_column)},
+                    y=alt.Y({repr(y_column)}, stack='center'),
+                    color=alt.Color({repr(category_column)}, scale=alt.Scale(scheme={repr(color_scheme)}))
+                ).properties(
+
+                )
+                st.altair_chart(streamgraph, use_container_width=True)
+                """)
+
+
+        if chart_type == "Candlestick Chart":
+            # Column selection
+            date_column = st.selectbox("Select the date column", df.columns.tolist())
+            open_column = st.selectbox("Select the open price column", df.columns.tolist())
+            high_column = st.selectbox("Select the high price column", df.columns.tolist())
+            low_column = st.selectbox("Select the low price column", df.columns.tolist())
+            close_column = st.selectbox("Select the close price column", df.columns.tolist())
+
+            # Optional date range selection
+            date_range = st.date_input("Select date range", [df[date_column].min(), df[date_column].max()])
+
+            user_code = textwrap.dedent(f"""
+                df_filtered = df[(df[{repr(date_column)}] >= str({repr(date_range[0])})) & (df[{repr(date_column)}] <= str({repr(date_range[1])}))]
+
+                fig = go.Figure(data=[go.Candlestick(
+                    x=df_filtered[{repr(date_column)}],
+                    open=df_filtered[{repr(open_column)}],
+                    high=df_filtered[{repr(high_column)}],
+                    low=df_filtered[{repr(low_column)}],
+                    close=df_filtered[{repr(close_column)}]
+                )])
+
+                st.plotly_chart(fig, use_container_width=True)
+                """)
+
+
+        if chart_type == "Radar Chart":
+            # Column selection
+            value_column = st.selectbox("Select the value column (radial axis)", df.columns.tolist())
+            category_column = st.selectbox("Select the category column (angular axis)", df.columns.tolist())
+            group_column = st.selectbox("Select the group column (for multiple traces)", df.columns.tolist())
+
+            # Plot customization
+            color_scheme = st.selectbox("Select color scheme", ["Viridis", "Plasma", "Inferno", "Magma", "Cividis"])
+
+            user_code = textwrap.dedent(f"""
+                fig = px.line_polar(
+                    df,
+                    r={repr(value_column)},
+                    theta={repr(category_column)},
+                    color={repr(group_column)},
+                    line_close=True,
+                    title="Polar Line Chart Example",
+                    color_discrete_sequence=getattr(px.colors.sequential, {repr(color_scheme)})
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                """)
+
+
+        if chart_type == "WordCloud":
+            # Column selection
+            text_column = st.selectbox("Select the text column for word cloud", df.columns.tolist())
+
+            # WordCloud customization
+            width = st.slider("Word cloud width", 400, 1200, 800)
+            height = st.slider("Word cloud height", 200, 800, 400)
+            bg_color = st.color_picker("Background color", "#FFFFFF")
+            max_words = st.slider("Maximum words", 50, 500, 200)
+            colormap = st.selectbox("Color scheme", ["viridis", "plasma", "inferno", "magma"])
+
+            user_code = textwrap.dedent(f"""
+            text = ' '.join(df[{repr(text_column)}].dropna().astype(str))
+            wordcloud = WordCloud(
+                width={repr(width)},
+                height={repr(height)},
+                background_color={repr(bg_color)},
+                max_words={repr(max_words)},
+                colormap={repr(colormap)}
+            ).generate(text)
+
+            fig, ax = plt.subplots()
+            ax.imshow(wordcloud, interpolation='bilinear')
+            ax.axis('off')
+            st.pyplot(fig)
+            """)
+
+
+        if chart_type == "Timeline Chart":
+            # Column selection
+            start_column = st.selectbox("Select the start date/time column", df.columns.tolist())
+            end_column = st.selectbox("Select the end date/time column", df.columns.tolist())
+            category_column = st.selectbox("Select the category column (y-axis)", df.columns.tolist())
+            group_column = st.selectbox("Select the group column (for color-coding)", df.columns.tolist())
+
+            # Plot customization
+            color_scheme = st.selectbox("Select color scheme", ["Plotly", "D3", "G10", "T10", "Alphabet"])
+
+            user_code = textwrap.dedent(f"""
+                fig = px.timeline(
+                    df,
+                    x_start={repr(start_column)},
+                    x_end={repr(end_column)},
+                    y={repr(category_column)},
+                    color={repr(group_column)},
+                    color_discrete_sequence=getattr(px.colors.qualitative, {repr(color_scheme)})
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            """)
+
+
+        if chart_type == "Density Chart":
+            # Column selection
+            x_column = st.selectbox("Select the x-axis column", df.columns.tolist())
+            y_column = st.selectbox("Select the y-axis column", df.columns.tolist())
+            category_column = st.selectbox("Select the category column (for color-coding)", df.columns.tolist())
+
+            # Plot customization
+            color_scheme = st.selectbox("Select color scheme", ["Plotly", "D3", "G10", "T10", "Alphabet"])
+
+            user_code = textwrap.dedent(f"""
+                fig = px.density_contour(
+                    df,
+                    x={repr(x_column)},
+                    y={repr(y_column)},
+                    color={repr(category_column)},
+                    title="Density Contour Plot Example",
+                    color_discrete_sequence=getattr(px.colors.qualitative, {repr(color_scheme)})
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                """)
+
+
+        if chart_type == "Gauge Chart":
+            # Column selection
+            value_column = st.selectbox("Select the column for gauge value", df.columns.tolist())
+            reference_column = st.selectbox("Select the column for reference value (optional)", ["None"] + df.columns.tolist())
+            
+            # Gauge customization
+            max_value = df[value_column].max()  # or let the user input it
+
+            max_value = st.number_input("Enter the maximum value for the gauge", value=float(df[value_column].max()))
+
+            user_code = textwrap.dedent(f"""
+                gauge_value = df[{repr(value_column)}].iloc[-1]
+                
+                reference_value = None
+                if {repr(reference_column)} != "None":
+                    reference_value = df[{repr(reference_column)}].iloc[-1]
+
+                fig = go.Figure(go.Indicator(
+                    mode="gauge+number+delta" if reference_value else "gauge+number",
+                    value=gauge_value,
+                    delta={{'reference': reference_value}} if reference_value else None,
+                    gauge={{'axis': {{'range': [None, {repr(max_value)}]}}}},
+                    title={{'text': "Gauge Chart Example"}}
+                ))
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                st.write(f"Current Value: {{gauge_value}}")
+                if reference_value:
+                    st.write(f"Reference Value: {{reference_value}}")
+                st.write(f"Maximum Value: {{max_value}}")
+                """)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1554,7 +1818,7 @@ def dashboard():
                     st.subheader(chart_data["title"])
                     try:
                         # Execute the custom code with the saved dataframe
-                        exec(chart_data["code"], {"df": df, "tb": st.session_state.tb, "st": st, "px":px, "plt": plt, "sns":sns})
+                        exec(chart_data["code"], {"df": df, "tb": st.session_state.tb, "st": st, "px":px, "plt": plt, "sns":sns, "alt": alt, "datetime": datetime, "go":go, "WordCloud": WordCloud, "max_value": max_value})
                     except Exception as e:
                         st.error(f"Error executing custom code: {str(e)}")
                         st.error(f"Chart data: {chart_data}")
