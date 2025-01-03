@@ -16,6 +16,10 @@ import pyreadstat
 import scipy
 import pyreadr
 import seaborn as sns 
+import plotly.express as px
+import textwrap
+import matplotlib.pyplot as plt
+
 
 # page config
 st.set_page_config(page_title="DataPhil", layout="wide")
@@ -1183,7 +1187,7 @@ def dashboard_tab():
             height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
             use_container_width = st.checkbox("use container width", value=True)
             # user code
-            user_code = f'''st.area_chart(
+            user_code = textwrap.dedent(f'''st.area_chart(
                 data = df,
                 x = {repr(x)},
                 y = {repr(y)},
@@ -1195,7 +1199,7 @@ def dashboard_tab():
                 use_container_width = {use_container_width}
              )
 
-            '''
+            ''')
 
         if chart_type == "Bar Chart":
             x = st.selectbox("X",df.columns)
@@ -1207,7 +1211,7 @@ def dashboard_tab():
             height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
             use_container_width = st.checkbox("use container width", value=True)
             # user code
-            user_code = f'''st.bar_chart(
+            user_code = textwrap.dedent(f'''st.bar_chart(
                 data = df,
                 x = {repr(x)},
                 y = {repr(y)},
@@ -1217,7 +1221,7 @@ def dashboard_tab():
                 width = {width},
                 height = {height},
                 use_container_width = {use_container_width}
-             )'''
+             )''')
 
         if chart_type == "Line Chart":
             x = st.selectbox("X",df.columns)
@@ -1229,7 +1233,7 @@ def dashboard_tab():
             height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
             use_container_width = st.checkbox("use container width", value=True)
             # user code
-            user_code = f"""st.line_chart(
+            user_code = textwrap.dedent(f"""st.line_chart(
                 data=df,
                 x={repr(x)},
                 y={repr(y)},
@@ -1239,8 +1243,7 @@ def dashboard_tab():
                 width={width},
                 height={height},
                 use_container_width={use_container_width}
-            )"""
-
+            )""")
 
 
         if chart_type == "Scatter Chart":
@@ -1253,7 +1256,7 @@ def dashboard_tab():
             height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
             use_container_width = st.checkbox("use container width", value=True)
             # user code
-            user_code = f'''st.scatter_chart(
+            user_code = textwrap.dedent(f'''st.scatter_chart(
                 data = df,
                 x = {repr(x)},
                 y = {repr(y)},
@@ -1265,7 +1268,168 @@ def dashboard_tab():
                 use_container_width = {use_container_width}
              )
 
-            '''      
+            ''')
+        
+
+        if chart_type == "Map":
+            latitude = st.selectbox("Latitude", df.columns)
+            longitude = st.selectbox("Longitude", df.columns)
+            size = st.selectbox("Size",[None]+list(df.columns))
+            color = st.selectbox("Color", [None]+list(df.columns))
+            use_container_width = st.checkbox("use container width", value=True)
+            # user code
+            user_code = textwrap.dedent(f"""st.map(
+                data = df,
+                latitude = {repr(latitude)},
+                longitude = {repr(longitude)},
+                size = {repr(size)},
+                color = {repr(color)},
+                use_container_width = {use_container_width}
+
+            )
+                        """)
+
+
+        if chart_type == "Pie Chart":
+            names = st.selectbox("Category Column", df.columns)
+            values = st.selectbox("Value Column", df.columns)
+            use_container_width = st.checkbox("use container width", value=True)
+            # user code
+            user_code = textwrap.dedent(f"""
+                fig = px.pie(
+                df,
+                names = {repr(names)},
+                values = {repr(values)},
+                )
+                st.plotly_chart(fig)
+            """)
+
+        
+        if chart_type == "Histogram":
+            x = st.selectbox("X", df.columns)
+            color = st.selectbox("Color", [None]+list(df.columns))
+            use_container_width = st.checkbox("use container width", value=True)
+
+            user_code = textwrap.dedent(f"""
+                fig = px.histogram(
+                df,
+                x = {repr(x)},
+                color = {repr(color)},
+                )
+                st.plotly_chart(fig,use_container_width = {use_container_width} )
+                """
+                )
+
+        if chart_type == "Box Plot":
+            x = st.selectbox("Category Column", df.columns)
+            y = st.selectbox("Value Column", df.columns)
+            color = st.selectbox("Color", [None]+list(df.columns))
+            use_container_width = st.checkbox("use container width", value=True)
+
+            user_code = textwrap.dedent(f"""
+                fig = px.box(
+                    df,
+                    x = {repr(x)},
+                    y = {repr(y)},
+                    color = {repr(color)}
+                    )
+                st.plotly_chart(fig, {use_container_width})
+                """
+                )
+
+        if chart_type == "Heatmap":
+
+            selected_columns = st.multiselect("Columns", df.columns.tolist(), default=df.columns.tolist())
+            corr_method = st.selectbox("Correlation Method", ["pearson", "spearman", "kendall"])
+            color_palette = st.selectbox("Color Palette", ["coolwarm", "viridis", "YlGnBu", "RdYlBu"])
+            show_annotations = st.checkbox("Show correlation values", value=True)
+            font_size = st.slider("Annotation font size", 6, 20, 10)
+
+            user_code = textwrap.dedent(f"""
+                fig, ax = plt.subplots(figsize=(10, 8))
+                correlation_matrix = df[{repr(selected_columns)}].corr(method={repr(corr_method)})
+                sns.heatmap(
+                    correlation_matrix, 
+                    annot={repr(show_annotations)}, 
+                    fmt=".2f", 
+                    cmap={repr(color_palette)}, 
+                    ax=ax, 
+                    annot_kws={{"size": {font_size}}}
+                )
+                st.pyplot(fig)
+                """)
+
+        if chart_type == "Violin Chart":
+
+            # Column selection
+            value_column = st.selectbox("Value Column (y-axis)", df.columns.tolist())
+            category_column = st.selectbox("Category Column (x-axis and color)", df.columns.tolist())
+
+            # Plot customization
+            show_box = st.checkbox("Show box plot inside violin", value=True)
+            show_points = st.checkbox("Show all data points", value=True)
+
+            user_code = textwrap.dedent(f"""
+                fig = px.violin(
+                    df,
+                    y={repr(value_column)},
+                    x={repr(category_column)},
+                    color={repr(category_column)},
+                    box={repr(show_box)},
+                    points={'"all"' if show_points else False},
+                    
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                """)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1390,7 +1554,7 @@ def dashboard():
                     st.subheader(chart_data["title"])
                     try:
                         # Execute the custom code with the saved dataframe
-                        exec(chart_data["code"], {"df": df, "tb": st.session_state.tb, "st": st})
+                        exec(chart_data["code"], {"df": df, "tb": st.session_state.tb, "st": st, "px":px, "plt": plt, "sns":sns})
                     except Exception as e:
                         st.error(f"Error executing custom code: {str(e)}")
                         st.error(f"Chart data: {chart_data}")
