@@ -1134,27 +1134,7 @@ def dashboard_tab():
                 sample_code = generate_chart_code(selected_chart)
                 st.code(sample_code, language='python')
 
-        
 
-        # Ask for chart title and axis labels
-        chart_title = st.text_input("Chart title")
-
-        # Let the user select the cell position
-        selected_cell = st.selectbox("Select cell position", st.session_state.layout["cells"])
-
-        # Create the chart when the user clicks a button
-        if st.button("Create Chart"):
-            st.session_state.charts[selected_cell] = {
-                "type": "custom",
-                "code": user_code,
-                "title": chart_title,
-                "data": df  # Store the actual dataframe snapshot
-            }
-            st.success(f"Chart created and placed in cell {selected_cell}")
-
-
-        # Display the dashboard
-        dashboard()
 
     with tab2: #GUI
 
@@ -1290,37 +1270,25 @@ def dashboard_tab():
 
 
 
+    # Ask for chart title and axis labels
+    chart_title = st.text_input("Chart title")
+
+    # Let the user select the cell position
+    selected_cell = st.selectbox("Select cell position", st.session_state.layout["cells"])
+
+    # Create the chart when the user clicks a button
+    if st.button("Create Chart"):
+        st.session_state.charts[selected_cell] = {
+            "type": "custom",
+            "code": user_code,
+            "title": chart_title,
+            "data": df  # Store the actual dataframe snapshot
+        }
+        st.success(f"Chart created and placed in cell {selected_cell}")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-        # Let the user select the cell position
-        selected_cell = st.selectbox("Select cell position", st.session_state.layout["cells"], key='select_cell_gui')
-
-        # Create the chart when the user clicks a button
-        if st.button("Create Chart", key='create_chart_gui'):
-            st.session_state.charts[selected_cell] = {
-                "type": "custom",
-                "code": user_code,
-                "title": chart_title,
-                "data": df  # Store the actual dataframe snapshot
-            }
-            st.success(f"Chart created and placed in cell {selected_cell}")
-
-
-        # Display the dashboard
-        dashboard()
-
+    # Display the dashboard
+    dashboard()
 
 
 
