@@ -1470,28 +1470,48 @@ def dashboard_tab():
 
         if chart_type == "Candlestick Chart":
             # Column selection
-            date_column = st.selectbox("Select the date column", df.columns.tolist())
-            open_column = st.selectbox("Select the open price column", df.columns.tolist())
-            high_column = st.selectbox("Select the high price column", df.columns.tolist())
-            low_column = st.selectbox("Select the low price column", df.columns.tolist())
-            close_column = st.selectbox("Select the close price column", df.columns.tolist())
+            date_column = st.selectbox("Select the date column", [""] + df.columns.tolist())
+            open_column = st.selectbox("Select the open price column", [""] + df.columns.tolist())
+            high_column = st.selectbox("Select the high price column", [""] + df.columns.tolist())
+            low_column = st.selectbox("Select the low price column", [""] + df.columns.tolist())
+            close_column = st.selectbox("Select the close price column", [""] + df.columns.tolist())
+
+            # Initialize date_range with a default value
+            date_range = None
 
             # Optional date range selection
-            date_range = st.date_input("Select date range", [df[date_column].min(), df[date_column].max()])
+            if date_column:
+                try:
+                    min_date = df[date_column].min()
+                    max_date = df[date_column].max()
+                    date_range = st.date_input("Select date range", [min_date, max_date])
+                except KeyError:
+                    st.error(f"The selected date column '{date_column}' is not valid. Please choose a valid date column.")
+            else:
+                st.warning("Please select a date column before setting the date range.")
 
-            user_code = textwrap.dedent(f"""
-                df_filtered = df[(df[{repr(date_column)}] >= str({repr(date_range[0])})) & (df[{repr(date_column)}] <= str({repr(date_range[1])}))]
+            # Use date_range only if it's defined and date_column is selected
+            if date_range and date_column:
+                df_filtered = df[(df[date_column] >= str(date_range[0])) & (df[date_column] <= str(date_range[1]))]
+            else:
+                df_filtered = df  # Use the original dataframe if date_range is not set
 
-                fig = go.Figure(data=[go.Candlestick(
-                    x=df_filtered[{repr(date_column)}],
-                    open=df_filtered[{repr(open_column)}],
-                    high=df_filtered[{repr(high_column)}],
-                    low=df_filtered[{repr(low_column)}],
-                    close=df_filtered[{repr(close_column)}]
-                )])
 
-                st.plotly_chart(fig, use_container_width=True)
-                """)
+            if date_range and date_column and all([open_column, high_column, low_column, close_column]):
+
+                user_code = textwrap.dedent(f"""
+                    df_filtered = df[(df[{repr(date_column)}] >= str({repr(date_range[0])})) & (df[{repr(date_column)}] <= str({repr(date_range[1])}))]
+
+                    fig = go.Figure(data=[go.Candlestick(
+                        x=df_filtered[{repr(date_column)}],
+                        open=df_filtered[{repr(open_column)}],
+                        high=df_filtered[{repr(high_column)}],
+                        low=df_filtered[{repr(low_column)}],
+                        close=df_filtered[{repr(close_column)}]
+                    )])
+
+                    st.plotly_chart(fig, use_container_width=True)
+                    """)
 
 
         if chart_type == "Radar Chart":
@@ -1597,26 +1617,27 @@ def dashboard_tab():
             
             # Gauge customization
               # or let the user input it
+            if value_column:
 
-            max_value = st.number_input("Enter the maximum value for the gauge", value=float(df[value_column].max()))
+                max_value = st.number_input("Enter the maximum value for the gauge", value=float(df[value_column].max()))
 
-            user_code = textwrap.dedent(f"""
-                gauge_value = df[{repr(value_column)}].iloc[-1]
+                user_code = textwrap.dedent(f"""
+                    gauge_value = df[{repr(value_column)}].iloc[-1]
 
-                reference_value = None
-                if {repr(reference_column)} != "None":
-                    reference_value = df[{repr(reference_column)}].iloc[-1]
+                    reference_value = None
+                    if {repr(reference_column)} != "None":
+                        reference_value = df[{repr(reference_column)}].iloc[-1]
 
-                fig = go.Figure(go.Indicator(
-                    mode="gauge+number+delta" if reference_value else "gauge+number",
-                    value=gauge_value,
-                    delta={{'reference': reference_value}} if reference_value else None,
-                    gauge={{'axis': {{'range': [None, {max_value}]}}}},
-                    
-                ))
+                    fig = go.Figure(go.Indicator(
+                        mode="gauge+number+delta" if reference_value else "gauge+number",
+                        value=gauge_value,
+                        delta={{'reference': reference_value}} if reference_value else None,
+                        gauge={{'axis': {{'range': [None, {max_value}]}}}},
+                        
+                    ))
 
-                st.plotly_chart(fig, use_container_width=True)
-                """)
+                    st.plotly_chart(fig, use_container_width=True)
+                    """)
 
 
         if chart_type == "KPI Card":
