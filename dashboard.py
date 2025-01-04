@@ -1596,13 +1596,13 @@ def dashboard_tab():
             reference_column = st.selectbox("Select the column for reference value (optional)", ["None"] + df.columns.tolist())
             
             # Gauge customization
-            max_value = df[value_column].max()  # or let the user input it
+              # or let the user input it
 
             max_value = st.number_input("Enter the maximum value for the gauge", value=float(df[value_column].max()))
 
             user_code = textwrap.dedent(f"""
                 gauge_value = df[{repr(value_column)}].iloc[-1]
-                
+
                 reference_value = None
                 if {repr(reference_column)} != "None":
                     reference_value = df[{repr(reference_column)}].iloc[-1]
@@ -1611,88 +1611,47 @@ def dashboard_tab():
                     mode="gauge+number+delta" if reference_value else "gauge+number",
                     value=gauge_value,
                     delta={{'reference': reference_value}} if reference_value else None,
-                    gauge={{'axis': {{'range': [None, {repr(max_value)}]}}}},
-                    title={{'text': "Gauge Chart Example"}}
+                    gauge={{'axis': {{'range': [None, {max_value}]}}}},
+                    
                 ))
 
                 st.plotly_chart(fig, use_container_width=True)
-
-                st.write(f"Current Value: {{gauge_value}}")
-                if reference_value:
-                    st.write(f"Reference Value: {{reference_value}}")
-                st.write(f"Maximum Value: {{max_value}}")
                 """)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        if chart_type == "KPI Card":
+
+            # Get list of numeric columns for value and delta
+            numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+            
+            # Get list of all columns for label
+            all_columns = df.columns.tolist()
+
+            # User inputs
+            label_column = st.selectbox("KPI label:", all_columns)
+            value_column = st.selectbox("current KPI value:", numeric_columns)
+            delta_column = st.selectbox("KPI change (delta):", ["None"] + numeric_columns)
+            
+            # Optional configurations
+            delta_color = st.selectbox("delta color:", ["normal", "inverse", "off"])
+            label_visibility = st.selectbox("label visibility?", ["visible", "hidden", "collapsed"])
+            border = st.checkbox("border around the metric?")
+
+            user_code = textwrap.dedent(f"""
+                # Get the latest values from the selected columns
+                label = df[{repr(label_column)}].iloc[-1]
+                value = df[{repr(value_column)}].iloc[-1]
+                delta = df[{repr(delta_column)}].iloc[-1] if {repr(delta_column)} != "None" else None
+
+                st.metric(
+                    label=label,
+                    value=value,
+                    delta=delta,
+                    delta_color={repr(delta_color)},
+                    label_visibility={repr(label_visibility)},
+                    border={repr(border)}
+                )
+                """)
 
 
 
@@ -1818,7 +1777,7 @@ def dashboard():
                     st.subheader(chart_data["title"])
                     try:
                         # Execute the custom code with the saved dataframe
-                        exec(chart_data["code"], {"df": df, "tb": st.session_state.tb, "st": st, "px":px, "plt": plt, "sns":sns, "alt": alt, "datetime": datetime, "go":go, "WordCloud": WordCloud, "max_value": max_value})
+                        exec(chart_data["code"], {"df": df, "tb": st.session_state.tb, "st": st, "px":px, "plt": plt, "sns":sns, "alt": alt, "datetime": datetime, "go":go, "WordCloud": WordCloud})
                     except Exception as e:
                         st.error(f"Error executing custom code: {str(e)}")
                         st.error(f"Chart data: {chart_data}")
