@@ -77,6 +77,11 @@ if 'custom_functions' not in st.session_state:
 if "custom_title" not in st.session_state:
     st.session_state.custom_title="Dashboard"
 
+if "chart_type" not in st.session_state:
+    st.session_state["chart_type"] = None  # Default to None
+if "is_typing_in_tui" not in st.session_state:
+    st.session_state["is_typing_in_tui"] = False  # Default to False
+
 
 
 def add_or_update_function():
@@ -1206,7 +1211,13 @@ def dashboard_tab():
         with col1:
             # Let the user input their own code
             user_code = st.text_area("Enter your custom code for the chart:", height=200)
+            
             manage_gui_availability(user_code)
+            if user_code.strip():  # If the user starts typing
+                st.session_state["is_typing_in_tui"] = True
+                st.session_state["chart_type"] = None  # Reset chart type in GUI
+            else:  # If the text area is cleared
+                st.session_state["is_typing_in_tui"] = False
 
         with col2:
             column_types = pd.DataFrame({'Data Types': df.dtypes.astype(str)})
@@ -1261,19 +1272,24 @@ def dashboard_tab():
 
 
         # Chart Type Selection
-        chart_type = st.selectbox(
-            "Select the type of chart you want to create",
-            [
-                "Area Chart", "Bar Chart", "Line Chart", "Scatter Chart",
+        chart_options = [
+                "None", "Area Chart", "Bar Chart", "Line Chart", "Scatter Chart",
                 "Map", "Pie Chart", "Histogram", "Box Plot", "Heatmap",
                 "Violin Chart", "Bubble Chart", "Sunburst Chart", "Treemap",
                 "Streamgraph", "Candlestick Chart", "Radar Chart", "WordCloud",
                 "Timeline Chart", "Density Chart", "Gauge Chart", "KPI Card"
-            ],
+            ]
+
+        st.session_state["chart_type"] = st.selectbox(
+            "Select the type of chart you want to create",
+            chart_options,
             disabled=st.session_state.get("disable_gui_chart", False),
-            index=None,
+            index=0 if st.session_state.get("chart_type") is None else chart_options.index(st.session_state["chart_type"]),
             placeholder="Choose a chart type..."
         )
+
+        chart_type = st.session_state["chart_type"]
+
 
         # Dynamic Chart Creation
         if chart_type == "Area Chart":
