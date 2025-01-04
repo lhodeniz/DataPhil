@@ -1041,11 +1041,75 @@ def report():
 
             components.html(pyg_html, height=1000)
 
+
+def aggregate():
+
+    # check for aggregation
+    aggregate_choice = st.radio("Do you want to aggregate the dataset?", ("Yes", "No"))
+
+    if aggregate_choice == "Yes":
+
+        # Let user select columns for grouping
+        group_columns = st.multiselect("Select columns to group by:", st.session_state.df.columns)
+
+        # Define available aggregation functions
+        agg_functions = ["mean", "sum", "count", "min", "max", "median", "std", "var", "mode", "nunique", "quantile"]
+
+        # Create a list to store aggregation selections
+        if 'agg_list' not in st.session_state:
+            st.session_state.agg_list = []
+
+        # Let user add multiple aggregations
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            agg_column = st.selectbox("Select column:", st.session_state.df.columns)
+        with col2:
+            agg_function = st.selectbox("Select function:", agg_functions)
+        with col3:
+            if st.button("Add Aggregation", key="add_aggregation_tables"):
+                st.session_state.agg_list.append((agg_column, agg_function))
+
+        # Display and allow removal of selected aggregations
+        for i, (col, func) in enumerate(st.session_state.agg_list):
+            st.write(f"{i+1}. {col} - {func}")
+            if st.button(f"Remove {i+1}", key=f"remove_aggregated{i+1}"):
+                st.session_state.agg_list.pop(i)
+                st.rerun()
+
+        if group_columns and st.session_state.agg_list:
+            # Create a dictionary for aggregation
+            agg_dict = {f"{col}_{func}_{i}": (col, func) for i, (col, func) in enumerate(st.session_state.agg_list)}
+            
+            # Perform groupby and aggregation
+            result = st.session_state.df.groupby(group_columns).agg(**agg_dict).reset_index()
+            
+            # Display the result
+            st.write("Aggregated Report:")
+            st.dataframe(result)
+            
+            df = result
+
+            agg_code = textwrap.dedent(f"""
+                # Perform aggregation
+                group_columns = {group_columns}
+                agg_dict = {agg_dict}
+                result = st.session_state.df.groupby(group_columns).agg(**agg_dict).reset_index()
+                df = result  # Use the aggregated result for the chart
+            """)
+
+    else:
+        agg_code = ''
+
+
+
 def dashboard_tab():
+    
+    
     tab1, tab2 = st.tabs(['TUI', 'GUI'])
 
     with tab1:#TUI
 
+        
         restore_backup()
         # Check for saved results
         st.session_state.tb = st.session_state.get('tb', {})
@@ -1145,7 +1209,7 @@ def dashboard_tab():
 
 
     with tab2: #GUI
-
+        
         restore_backup()
         # Check for saved results
         st.session_state.tb = st.session_state.get('tb', {})
@@ -1168,6 +1232,23 @@ def dashboard_tab():
         df = st.session_state.df
         st.dataframe(df.head(5))
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         # Chart Type Selection
         chart_type = st.selectbox(
             "Select the type of chart you want to create",
@@ -1177,11 +1258,14 @@ def dashboard_tab():
                 "Violin Chart", "Bubble Chart", "Sunburst Chart", "Treemap",
                 "Streamgraph", "Candlestick Chart", "Radar Chart", "WordCloud",
                 "Timeline Chart", "Density Chart", "Gauge Chart", "KPI Card"
-            ]
+            ],
+            index=None,
+            placeholder="Choose a chart type..."
         )
 
         # Dynamic Chart Creation
         if chart_type == "Area Chart":
+            aggregate()
             x = st.selectbox("X",df.columns)
             y = st.selectbox("Y", df.columns)
             color = st.selectbox("Color", [None]+list(df.columns) )
@@ -1673,7 +1757,6 @@ def dashboard_tab():
                     border={repr(border)}
                 )
                 """)
-
 
 
 
