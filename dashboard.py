@@ -1100,6 +1100,15 @@ def aggregate():
     else:
         agg_code = ''
 
+def manage_gui_availability(user_code: str):
+    """
+    Disable GUI chart selection if the user is typing in TUI.
+    """
+    # Update session state based on TUI input
+    if user_code.strip():  # If there is any text in TUI
+        st.session_state["disable_gui_chart"] = True
+    else:  # If TUI code is cleared
+        st.session_state["disable_gui_chart"] = False
 
 
 def dashboard_tab():
@@ -1197,6 +1206,8 @@ def dashboard_tab():
         with col1:
             # Let the user input their own code
             user_code = st.text_area("Enter your custom code for the chart:", height=200)
+            manage_gui_availability(user_code)
+
         with col2:
             column_types = pd.DataFrame({'Data Types': df.dtypes.astype(str)})
             st.dataframe(column_types, width=500)
@@ -1259,6 +1270,7 @@ def dashboard_tab():
                 "Streamgraph", "Candlestick Chart", "Radar Chart", "WordCloud",
                 "Timeline Chart", "Density Chart", "Gauge Chart", "KPI Card"
             ],
+            disabled=st.session_state.get("disable_gui_chart", False),
             index=None,
             placeholder="Choose a chart type..."
         )
