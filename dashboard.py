@@ -82,6 +82,8 @@ if "chart_type" not in st.session_state:
 if "is_typing_in_tui" not in st.session_state:
     st.session_state["is_typing_in_tui"] = False  # Default to False
 
+if 'agg_list' not in st.session_state:
+    st.session_state.agg_list = []
 
 
 def add_or_update_function():
@@ -874,6 +876,9 @@ def generate_chart_code(chart_type, df_name='df'):
             }}
         )
 
+        # reset index
+        grouped_df = grouped_df.reset_index()
+
         # Sorting by Multiple Columns
         sorted_df = grouped_df.sort_values(
             by=['column3', 'column4'],  # Sort by column3 and column4
@@ -1049,11 +1054,6 @@ def report():
 
 def aggregate():
 
-    # check for aggregation
-    aggregate_choice = st.radio("Do you want to aggregate the dataset?", ("Yes", "No"))
-
-    if aggregate_choice == "Yes":
-
         # Let user select columns for grouping
         group_columns = st.multiselect("Select columns to group by:", st.session_state.df.columns)
 
@@ -1061,9 +1061,11 @@ def aggregate():
         agg_functions = ["mean", "sum", "count", "min", "max", "median", "std", "var", "mode", "nunique", "quantile"]
 
         # Create a list to store aggregation selections
-        if 'agg_list' not in st.session_state:
-            st.session_state.agg_list = []
-
+        # Ensure st.session_state.agg_list is a list of (column, function) pairs
+        # Check if the list is not empty before accessing its first element
+        if st.session_state.agg_list and not isinstance(st.session_state.agg_list[0], tuple):
+            st.session_state.agg_list = [(col, func) for col, func in zip(st.session_state.agg_list[::2], st.session_state.agg_list[1::2])]
+        
         # Let user add multiple aggregations
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -1083,7 +1085,12 @@ def aggregate():
 
         if group_columns and st.session_state.agg_list:
             # Create a dictionary for aggregation
-            agg_dict = {f"{col}_{func}_{i}": (col, func) for i, (col, func) in enumerate(st.session_state.agg_list)}
+            agg_dict = {}
+            for i, (col, func) in enumerate(st.session_state.agg_list):
+                if func == 'quantile':
+                    agg_dict[f"{col}_{func}_{i}"] = (col, lambda x: x.quantile(0.5))  # Using 0.5 for median, adjust as needed
+                else:
+                    agg_dict[f"{col}_{func}_{i}"] = (col, func)
             
             # Perform groupby and aggregation
             result = st.session_state.df.groupby(group_columns).agg(**agg_dict).reset_index()
@@ -1092,18 +1099,10 @@ def aggregate():
             st.write("Aggregated Report:")
             st.dataframe(result)
             
-            df = result
+            
+            return result
 
-            agg_code = textwrap.dedent(f"""
-                # Perform aggregation
-                group_columns = {group_columns}
-                agg_dict = {agg_dict}
-                result = st.session_state.df.groupby(group_columns).agg(**agg_dict).reset_index()
-                df = result  # Use the aggregated result for the chart
-            """)
 
-    else:
-        agg_code = ''
 
 def manage_gui_availability(user_code: str):
     """
@@ -1253,17 +1252,18 @@ def dashboard_tab():
 
         df = st.session_state.df
         st.dataframe(df.head(5))
+        # check for aggregation
+        aggregate_choice = st.radio("Do you want to aggregate the dataset?", ("Yes", "No"))
 
+        if aggregate_choice == "Yes":
+            
+            result = aggregate()
+            if result is not None:
+                st.session_state.aggregated_df = result
+                df = result
 
-
-
-
-
-
-
-
-
-
+        else:
+            st.write("No aggregation performed.")
 
 
 
@@ -1318,6 +1318,7 @@ def dashboard_tab():
             ''')
 
         if chart_type == "Bar Chart":
+
             x = st.selectbox("X",df.columns)
             y = st.selectbox("Y", df.columns)
             color = st.selectbox("Color", [None]+list(df.columns) )
@@ -1789,6 +1790,8 @@ def dashboard_tab():
 
 
 
+
+
     # Ask for chart title and axis labels
     chart_title = st.text_input("Chart title")
 
@@ -1806,12 +1809,25 @@ def dashboard_tab():
         st.success(f"Chart created and placed in cell {selected_cell}")
 
 
+
     # Display the dashboard
+
     dashboard()
 
 
 
+
 def dashboard():
+
+    if 'aggregated_df' in st.session_state:
+        df = st.session_state.aggregated_df
+
+    # Remove the aggregated_df from session state after using it
+        del st.session_state.aggregated_df
+    else:
+        df = st.session_state.df
+
+    st.write(df.head())
     with st.sidebar:
         df = st.session_state.selected_df
         st.write("Dashboard Filters")
@@ -1872,7 +1888,7 @@ def dashboard():
             df = apply_filters(df)
 
 
-
+    
 
     if "rows" not in st.session_state.layout or "cols" not in st.session_state.layout:
         st.error("Dashboard layout is not configured. Please set it up first.")
@@ -1898,6 +1914,7 @@ def dashboard():
         unsafe_allow_html=True
     )
 
+    
 
     for i in range(st.session_state.layout["rows"]):
         cols = st.columns(st.session_state.layout["cols"])
@@ -1908,6 +1925,7 @@ def dashboard():
                 with col:
                     st.subheader(chart_data["title"])
                     try:
+                        
                         # Execute the custom code with the saved dataframe
                         exec(chart_data["code"], {"df": df, "tb": st.session_state.tb, "st": st, "px":px, "plt": plt, "sns":sns, "alt": alt, "datetime": datetime, "go":go, "WordCloud": WordCloud})
                     except Exception as e:
