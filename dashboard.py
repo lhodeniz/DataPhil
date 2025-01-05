@@ -1293,7 +1293,7 @@ def dashboard_tab():
 
         # Dynamic Chart Creation
         if chart_type == "Area Chart":
-            aggregate()
+            
             x = st.selectbox("X",df.columns)
             y = st.selectbox("Y", df.columns)
             color = st.selectbox("Color", [None]+list(df.columns) )
