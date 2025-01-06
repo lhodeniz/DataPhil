@@ -1252,23 +1252,6 @@ def dashboard_tab():
 
         df = st.session_state.df
         st.dataframe(df.head(5))
-        # check for aggregation
-        aggregate_choice = st.radio("Do you want to aggregate the dataset?", ("Yes", "No"))
-
-        if aggregate_choice == "Yes":
-            
-            result = aggregate()
-            if result is not None:
-                st.session_state.aggregated_df = result
-                df = result
-
-        else:
-            st.write("No aggregation performed.")
-
-
-
-
-
 
 
         # Chart Type Selection
@@ -1819,15 +1802,6 @@ def dashboard_tab():
 
 def dashboard():
 
-    if 'aggregated_df' in st.session_state:
-        df = st.session_state.aggregated_df
-
-    # Remove the aggregated_df from session state after using it
-        del st.session_state.aggregated_df
-    else:
-        df = st.session_state.df
-
-    st.write(df.head())
     with st.sidebar:
         df = st.session_state.selected_df
         st.write("Dashboard Filters")
