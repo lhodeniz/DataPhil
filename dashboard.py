@@ -1292,8 +1292,13 @@ def dashboard_tab():
             height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
             use_container_width = st.checkbox("use container width", value=True)
             # user code
-            user_code = textwrap.dedent(f'''st.area_chart(
-                data = df,
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f'''st.area_chart(
+                data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                 x = {repr(x)},
                 y = {repr(y)},
                 color = {repr(color)},
@@ -1347,8 +1352,14 @@ def dashboard_tab():
             height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
             use_container_width = st.checkbox("use container width", value=True)
             # user code
-            user_code = textwrap.dedent(f"""st.line_chart(
-                data=df,
+
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+            
+            st.session_state.chart_code = textwrap.dedent(f"""st.line_chart(
+                data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                 x={repr(x)},
                 y={repr(y)},
                 color={repr(color)},
@@ -1370,8 +1381,15 @@ def dashboard_tab():
             height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
             use_container_width = st.checkbox("use container width", value=True)
             # user code
-            user_code = textwrap.dedent(f'''st.scatter_chart(
-                data = df,
+
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+
+            st.session_state.chart_code = textwrap.dedent(f'''st.scatter_chart(
+                data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                 x = {repr(x)},
                 y = {repr(y)},
                 color = {repr(color)},
@@ -1392,8 +1410,16 @@ def dashboard_tab():
             color = st.selectbox("Color", [None]+list(df.columns))
             use_container_width = st.checkbox("use container width", value=True)
             # user code
-            user_code = textwrap.dedent(f"""st.map(
-                data = df,
+
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+
+
+            st.session_state.chart_code = textwrap.dedent(f"""st.map(
+                data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                 latitude = {repr(latitude)},
                 longitude = {repr(longitude)},
                 size = {repr(size)},
@@ -1409,9 +1435,16 @@ def dashboard_tab():
             values = st.selectbox("Value Column", df.columns)
             use_container_width = st.checkbox("use container width", value=True)
             # user code
-            user_code = textwrap.dedent(f"""
+
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+
+            st.session_state.chart_code = textwrap.dedent(f"""
                 fig = px.pie(
-                df,
+                {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                 names = {repr(names)},
                 values = {repr(values)},
                 )
@@ -1424,9 +1457,14 @@ def dashboard_tab():
             color = st.selectbox("Color", [None]+list(df.columns))
             use_container_width = st.checkbox("use container width", value=True)
 
-            user_code = textwrap.dedent(f"""
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
                 fig = px.histogram(
-                df,
+                {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                 x = {repr(x)},
                 color = {repr(color)},
                 )
@@ -1440,9 +1478,14 @@ def dashboard_tab():
             color = st.selectbox("Color", [None]+list(df.columns))
             use_container_width = st.checkbox("use container width", value=True)
 
-            user_code = textwrap.dedent(f"""
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
                 fig = px.box(
-                    df,
+                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                     x = {repr(x)},
                     y = {repr(y)},
                     color = {repr(color)}
@@ -1459,9 +1502,14 @@ def dashboard_tab():
             show_annotations = st.checkbox("Show correlation values", value=True)
             font_size = st.slider("Annotation font size", 6, 20, 10)
 
-            user_code = textwrap.dedent(f"""
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
                 fig, ax = plt.subplots(figsize=(10, 8))
-                correlation_matrix = df[{repr(selected_columns)}].corr(method={repr(corr_method)})
+                correlation_matrix = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(selected_columns)}].corr(method={repr(corr_method)})
                 sns.heatmap(
                     correlation_matrix, 
                     annot={repr(show_annotations)}, 
@@ -1483,9 +1531,14 @@ def dashboard_tab():
             show_box = st.checkbox("Show box plot inside violin", value=True)
             show_points = st.checkbox("Show all data points", value=True)
 
-            user_code = textwrap.dedent(f"""
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
                 fig = px.violin(
-                    df,
+                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                     y={repr(value_column)},
                     x={repr(category_column)},
                     color={repr(category_column)},
@@ -1505,9 +1558,14 @@ def dashboard_tab():
             color_column = st.selectbox("color column", df.columns.tolist())
             hover_column = st.selectbox("hover data column", df.columns.tolist())
 
-            user_code = textwrap.dedent(f"""
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
                 fig = px.scatter(
-                    df,
+                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                     x={repr(x_column)},
                     y={repr(y_column)},
                     size={repr(size_column)},
@@ -1523,10 +1581,15 @@ def dashboard_tab():
             path_columns = st.multiselect("Select hierarchical category columns (in order)", all_columns, max_selections=3)
             value_column = st.selectbox("Select the value column", all_columns)
 
-            user_code = textwrap.dedent(f"""
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
             if {repr(path_columns)} and {repr(value_column)}:
                 fig = px.sunburst(
-                    df,
+                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                     path={repr(path_columns)},
                     values={repr(value_column)},
                     
@@ -1543,10 +1606,15 @@ def dashboard_tab():
             path_columns = st.multiselect("Select hierarchical category columns (in order)", all_columns, max_selections=3)
             value_column = st.selectbox("Select the value column", all_columns)
 
-            user_code = textwrap.dedent(f"""
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
                 if {repr(path_columns)} and {repr(value_column)}:
                     fig = px.treemap(
-                        df,
+                        {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                         path={repr(path_columns)},
                         values={repr(value_column)},
 
@@ -1566,8 +1634,13 @@ def dashboard_tab():
             # Plot customization
             color_scheme = st.selectbox("Select color scheme", ["category10", "category20", "tableau10", "tableau20"])
 
-            user_code = textwrap.dedent(f"""
-                streamgraph = alt.Chart(df).mark_area().encode(
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
+                streamgraph = alt.Chart({data[1:-1] if data.startswith("'") and data.endswith("'") else data}).mark_area().encode(
                     x={repr(x_column)},
                     y=alt.Y({repr(y_column)}, stack='center'),
                     color=alt.Color({repr(category_column)}, scale=alt.Scale(scheme={repr(color_scheme)}))
@@ -1609,8 +1682,13 @@ def dashboard_tab():
 
             if date_range and date_column and all([open_column, high_column, low_column, close_column]):
 
-                user_code = textwrap.dedent(f"""
-                    df_filtered = df[(df[{repr(date_column)}] >= str({repr(date_range[0])})) & (df[{repr(date_column)}] <= str({repr(date_range[1])}))]
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    df_filtered = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[({data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(date_column)}] >= str({repr(date_range[0])})) & ({data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(date_column)}] <= str({repr(date_range[1])}))]
 
                     fig = go.Figure(data=[go.Candlestick(
                         x=df_filtered[{repr(date_column)}],
@@ -1633,9 +1711,14 @@ def dashboard_tab():
             # Plot customization
             color_scheme = st.selectbox("Select color scheme", ["Viridis", "Plasma", "Inferno", "Magma", "Cividis"])
 
-            user_code = textwrap.dedent(f"""
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
                 fig = px.line_polar(
-                    df,
+                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                     r={repr(value_column)},
                     theta={repr(category_column)},
                     color={repr(group_column)},
@@ -1658,8 +1741,13 @@ def dashboard_tab():
             max_words = st.slider("Maximum words", 50, 500, 200)
             colormap = st.selectbox("Color scheme", ["viridis", "plasma", "inferno", "magma"])
 
-            user_code = textwrap.dedent(f"""
-            text = ' '.join(df[{repr(text_column)}].dropna().astype(str))
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
+            text = ' '.join({data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(text_column)}].dropna().astype(str))
             wordcloud = WordCloud(
                 width={repr(width)},
                 height={repr(height)},
@@ -1685,9 +1773,14 @@ def dashboard_tab():
             # Plot customization
             color_scheme = st.selectbox("Select color scheme", ["Plotly", "D3", "G10", "T10", "Alphabet"])
 
-            user_code = textwrap.dedent(f"""
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
                 fig = px.timeline(
-                    df,
+                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                     x_start={repr(start_column)},
                     x_end={repr(end_column)},
                     y={repr(category_column)},
@@ -1707,9 +1800,14 @@ def dashboard_tab():
             # Plot customization
             color_scheme = st.selectbox("Select color scheme", ["Plotly", "D3", "G10", "T10", "Alphabet"])
 
-            user_code = textwrap.dedent(f"""
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
                 fig = px.density_contour(
-                    df,
+                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                     x={repr(x_column)},
                     y={repr(y_column)},
                     color={repr(category_column)},
@@ -1731,12 +1829,17 @@ def dashboard_tab():
 
                 max_value = st.number_input("Enter the maximum value for the gauge", value=float(df[value_column].max()))
 
-                user_code = textwrap.dedent(f"""
-                    gauge_value = df[{repr(value_column)}].iloc[-1]
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    gauge_value = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(value_column)}].iloc[-1]
 
                     reference_value = None
                     if {repr(reference_column)} != "None":
-                        reference_value = df[{repr(reference_column)}].iloc[-1]
+                        reference_value = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(reference_column)}].iloc[-1]
 
                     fig = go.Figure(go.Indicator(
                         mode="gauge+number+delta" if reference_value else "gauge+number",
@@ -1768,11 +1871,16 @@ def dashboard_tab():
             label_visibility = st.selectbox("label visibility?", ["visible", "hidden", "collapsed"])
             border = st.checkbox("border around the metric?")
 
-            user_code = textwrap.dedent(f"""
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f"""
                 # Get the latest values from the selected columns
-                label = df[{repr(label_column)}].iloc[-1]
-                value = df[{repr(value_column)}].iloc[-1]
-                delta = df[{repr(delta_column)}].iloc[-1] if {repr(delta_column)} != "None" else None
+                label = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(label_column)}].iloc[-1]
+                value = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(value_column)}].iloc[-1]
+                delta = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(delta_column)}].iloc[-1] if {repr(delta_column)} != "None" else None
 
                 st.metric(
                     label=label,
@@ -1882,7 +1990,6 @@ def dashboard():
 
 
     
-    st.write(df.head())
 
     if "rows" not in st.session_state.layout or "cols" not in st.session_state.layout:
         st.error("Dashboard layout is not configured. Please set it up first.")
