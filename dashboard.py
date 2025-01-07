@@ -2177,7 +2177,7 @@ else:
             width: 60% !important;
         }
         [data-testid="stSelectbox"]{
-            width: 100% !important;
+            width: 90% !important;
         }
         [data-testid="stTextInput"]{
             width: 50% !important;
