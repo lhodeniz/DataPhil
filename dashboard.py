@@ -42,6 +42,7 @@ if "uploaded_file" not in st.session_state:
 if 'df' not in st.session_state:
     st.session_state.df = pd.DataFrame()
 
+
 if 'selected_df' not in st.session_state:
       st.session_state.selected_df = pd.DataFrame()
 
@@ -79,12 +80,19 @@ if "custom_title" not in st.session_state:
 
 if "chart_type" not in st.session_state:
     st.session_state["chart_type"] = None  # Default to None
-if "is_typing_in_tui" not in st.session_state:
-    st.session_state["is_typing_in_tui"] = False  # Default to False
+
 
 if 'agg_list' not in st.session_state:
     st.session_state.agg_list = []
 
+if 'agg_event' not in st.session_state:
+    st.session_state.agg_event = False
+
+if 'agg_code' not in st.session_state:
+    st.session_state.agg_code = ''
+
+if 'chart_code' not in st.session_state:
+    st.session_state.chart_code =''
 
 def add_or_update_function():
     func_name = st.session_state.function_name
@@ -1086,37 +1094,30 @@ def aggregate():
         if group_columns and st.session_state.agg_list:
             # Create a dictionary for aggregation
             agg_dict = {}
-            for i, (col, func) in enumerate(st.session_state.agg_list):
+            for col, func in st.session_state.agg_list:
                 if func == 'quantile':
-                    agg_dict[f"{col}_{func}_{i}"] = (col, lambda x: x.quantile(0.5))  # Using 0.5 for median, adjust as needed
+                    agg_dict[col] = lambda x: x.quantile(0.5)  # Using 0.5 for median, adjust as needed
                 else:
-                    agg_dict[f"{col}_{func}_{i}"] = (col, func)
+                    agg_dict[col] = func
             
             # Perform groupby and aggregation
-            result = st.session_state.df.groupby(group_columns).agg(**agg_dict).reset_index()
+            result = st.session_state.df.groupby(group_columns).agg(agg_dict).reset_index()
+            st.session_state.agg_code = f'st.session_state.df.groupby({group_columns}).agg({agg_dict}).reset_index()'
             
             # Display the result
             st.write("Aggregated Report:")
             st.dataframe(result)
             
             
-            return result
+            return st.session_state.agg_code
 
 
 
-def manage_gui_availability(user_code: str):
-    """
-    Disable GUI chart selection if the user is typing in TUI.
-    """
-    # Update session state based on TUI input
-    if user_code.strip():  # If there is any text in TUI
-        st.session_state["disable_gui_chart"] = True
-    else:  # If TUI code is cleared
-        st.session_state["disable_gui_chart"] = False
 
 
 def dashboard_tab():
     
+   
     
     tab1, tab2 = st.tabs(['TUI', 'GUI'])
 
@@ -1209,14 +1210,8 @@ def dashboard_tab():
         col1, col2, col3 = st.columns([3,1,3], gap="small")
         with col1:
             # Let the user input their own code
-            user_code = st.text_area("Enter your custom code for the chart:", height=200)
+            user_code = st.text_area("Enter your custom code for the chart:", value = f'agg_data = {st.session_state.agg_code}'+ "\n"+st.session_state.chart_code, height=200)
             
-            manage_gui_availability(user_code)
-            if user_code.strip():  # If the user starts typing
-                st.session_state["is_typing_in_tui"] = True
-                st.session_state["chart_type"] = None  # Reset chart type in GUI
-            else:  # If the text area is cleared
-                st.session_state["is_typing_in_tui"] = False
 
         with col2:
             column_types = pd.DataFrame({'Data Types': df.dtypes.astype(str)})
@@ -1253,6 +1248,18 @@ def dashboard_tab():
         df = st.session_state.df
         st.dataframe(df.head(5))
 
+        aggregate_choice = st.radio("Do you want to aggregate the dataset?", ("Yes", "No"))
+        if aggregate_choice == "Yes":
+            
+            st.session_state.agg_code = aggregate()
+            st.session_state.agg_event = True
+
+        else:
+            st.session_state.agg_event = False
+            st.write("No aggregation performed.")
+
+
+
 
         # Chart Type Selection
         chart_options = [
@@ -1266,7 +1273,6 @@ def dashboard_tab():
         st.session_state["chart_type"] = st.selectbox(
             "Select the type of chart you want to create",
             chart_options,
-            disabled=st.session_state.get("disable_gui_chart", False),
             index=0 if st.session_state.get("chart_type") is None else chart_options.index(st.session_state["chart_type"]),
             placeholder="Choose a chart type..."
         )
@@ -1300,6 +1306,7 @@ def dashboard_tab():
 
             ''')
 
+
         if chart_type == "Bar Chart":
 
             x = st.selectbox("X",df.columns)
@@ -1310,9 +1317,14 @@ def dashboard_tab():
             width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
             height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
             use_container_width = st.checkbox("use container width", value=True)
-            # user code
-            user_code = textwrap.dedent(f'''st.bar_chart(
-                data = df,
+
+            if st.session_state.agg_event:
+                data = 'agg_data'
+            else:
+                data = 'df'
+
+            st.session_state.chart_code = textwrap.dedent(f'''st.bar_chart(
+                data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                 x = {repr(x)},
                 y = {repr(y)},
                 color = {repr(color)},
@@ -1322,6 +1334,8 @@ def dashboard_tab():
                 height = {height},
                 use_container_width = {use_container_width}
              )''')
+
+            
 
         if chart_type == "Line Chart":
             x = st.selectbox("X",df.columns)
@@ -1802,6 +1816,7 @@ def dashboard_tab():
 
 def dashboard():
 
+
     with st.sidebar:
         df = st.session_state.selected_df
         st.write("Dashboard Filters")
@@ -1859,10 +1874,15 @@ def dashboard():
                 with col3:
                     st.button("Remove", key=f"remove_{i}", on_click=remove_filter, args=(i,))
         if st.button("Update Dashboard", key = "update"):
-            df = apply_filters(df)
+            df = apply_filters(df)   
+
+
+
+ 
 
 
     
+    st.write(df.head())
 
     if "rows" not in st.session_state.layout or "cols" not in st.session_state.layout:
         st.error("Dashboard layout is not configured. Please set it up first.")
@@ -1906,6 +1926,7 @@ def dashboard():
                         st.error(f"Error executing custom code: {str(e)}")
                         st.error(f"Chart data: {chart_data}")
 
+    
 
 
 def export_settings():
