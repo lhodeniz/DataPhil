@@ -1102,7 +1102,7 @@ def aggregate():
             
             # Perform groupby and aggregation
             result = st.session_state.df.groupby(group_columns).agg(agg_dict).reset_index()
-            st.session_state.agg_code = f'st.session_state.df.groupby({group_columns}).agg({agg_dict}).reset_index()'
+            st.session_state.agg_code = f'df.groupby({group_columns}).agg({agg_dict}).reset_index()'
             
             # Display the result
             st.write("Aggregated Report:")
