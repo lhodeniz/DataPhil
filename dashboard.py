@@ -2170,6 +2170,36 @@ def dataframe_to_csv(dataframe):
 if show_only_dashboard:
     dashboard()
 else:
+    # adjust width of elements
+    st.markdown("""
+        <style>
+        [data-testid="stFileUploader"]{
+            width: 60% !important;
+        }
+        [data-testid="stSelectbox"]{
+            width: 100% !important;
+        }
+        [data-testid="stTextInput"]{
+            width: 50% !important;
+        }
+        [data-testid="stNumberInput"]{
+            width: 50% !important;
+        }
+        [data-testid="stSlider"],
+        [data-testid="stDateInput"],
+        [data-testid="stTimeInput"] {
+            width: 100% !important;
+        }
+        div[data-baseweb="select"] {
+            width: 50% !important;
+        }
+        div[data-baseweb="select"] > div {
+            width: 100% !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+
     # header
     st.markdown("<h2 style='text-align: center;'>Welcome to DataPhil!👋</h2>",
             unsafe_allow_html=True)
