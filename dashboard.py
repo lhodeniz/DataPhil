@@ -159,8 +159,8 @@ def summary():
         st.write(f"There are {df_duplicated} duplicated rows.")
 
 def fix():
-    tab1, tab2, tab3 = st.tabs(
-        ["Convert Data Types", "Handle Missing Values", "Drop Duplicated Rows"])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["Convert Data Types", "Handle Missing Values", "Drop Duplicated Rows", "Edit Dataset"])
 
     with tab1:
      
@@ -286,6 +286,19 @@ def fix():
                 st.session_state.df.drop_duplicates(inplace=True)
                 st.success("All duplicate rows have been dropped.")
                 backup_df()
+    with tab4:
+
+        # Display the DataFrame using st.data_editor
+        edited_df = st.data_editor(
+            st.session_state.df,
+            num_rows="dynamic",
+            key="data_editor"
+        )
+
+        # Save button to update session state
+        if st.button("Save"):
+            st.session_state.df = edited_df
+            st.success("Changes saved to session state")
 
 def new_columns():
     
@@ -620,6 +633,7 @@ def upload_dataset():
                     st.warning("No valid files to process.")
             else:
                 st.warning("Please upload some files first.")
+
 
 
 
