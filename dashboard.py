@@ -117,11 +117,6 @@ def backup_df():
     if 'df_backup' not in st.session_state or not st.session_state.df_backup.equals(st.session_state.df):
         st.session_state.df_backup = st.session_state.df.copy()
 
-def restore_backup():
-    if 'df_backup' in st.session_state:
-        st.session_state.df = st.session_state.df_backup.copy()
-
-
 
 # functions
 
@@ -168,7 +163,7 @@ def fix():
         ["Convert Data Types", "Handle Missing Values", "Drop Duplicated Rows"])
 
     with tab1:
-     restore_backup()
+     
      # Let user select a column
      column_to_convert = st.selectbox("Select a column to convert", st.session_state.df.columns)
      
@@ -205,7 +200,7 @@ def fix():
 
 
     with tab2:
-        restore_backup()
+        
         # Get columns with missing values
         columns_with_missing = st.session_state.df.columns[st.session_state.df.isnull().any()].tolist()
         
@@ -277,7 +272,7 @@ def fix():
 
 
     with tab3:
-        restore_backup()
+        
         # Check for duplicate rows
         duplicate_rows = st.session_state.df.duplicated()
         num_duplicates = duplicate_rows.sum()
@@ -293,8 +288,7 @@ def fix():
                 backup_df()
 
 def new_columns():
-    restore_backup()
-
+    
     tab1, tab2, tab3 = st.tabs(["Add New Columns", "Delete Columns", "Rename Columns"])
 
     with tab1:
@@ -369,7 +363,7 @@ def new_columns():
 
     with tab2:
 
-     restore_backup()   
+     
      new_columns = [col for col in st.session_state.df.columns if col not in st.session_state.original_columns]
      if new_columns:
             
@@ -416,7 +410,7 @@ def new_columns():
         st.dataframe(st.session_state.df.head())
 
 def export():
-    restore_backup()
+    
 
     # File uploader for importing settings
     json_file = st.file_uploader("Choose a settings file", type="json")
@@ -915,7 +909,6 @@ def report():
      tab1, tab2, tab3 = st.tabs(["Tables", "Filters", "Visualization"])
  
      with tab1: #Tables    
-        restore_backup()
         
         # Let user select columns for grouping
         group_columns = st.multiselect("Select columns to group by:", st.session_state.df.columns)
@@ -975,7 +968,7 @@ def report():
             st.write("Please select grouping columns and add at least one aggregation.")
      
      with tab2: #Filters
-        restore_backup()
+        
         # Step 1: Select dataframe
         dataframe_options = ["Original Dataframe"] + list(st.session_state.get('tb', {}).keys())
         selected_df_name = st.selectbox("Select a dataframe:", dataframe_options)
@@ -1130,7 +1123,7 @@ def dashboard_tab():
     with tab1:#TUI
 
         
-        restore_backup()
+        
         # Check for saved results
         st.session_state.tb = st.session_state.get('tb', {})
         tb = pd.DataFrame(st.session_state.tb.items(), columns=['Key', 'Value'])
@@ -1232,7 +1225,7 @@ def dashboard_tab():
 
     with tab2: #GUI
         
-        restore_backup()
+        
         # Check for saved results
         st.session_state.tb = st.session_state.get('tb', {})
         tb = pd.DataFrame(st.session_state.tb.items(), columns=['Key', 'Value'])
