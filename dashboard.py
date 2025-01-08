@@ -26,7 +26,8 @@ from wordcloud import WordCloud
 
 
 # page config
-st.set_page_config(page_title="DataPhil", layout="wide")
+st.set_page_config(page_title="DataPhil", layout="wide", initial_sidebar_state="collapsed")
+
 
 show_only_dashboard = st.toggle("Show Only Dashboard")
 
