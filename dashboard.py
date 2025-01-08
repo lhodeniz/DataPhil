@@ -46,6 +46,9 @@ if 'df' not in st.session_state:
 if 'selected_df' not in st.session_state:
       st.session_state.selected_df = pd.DataFrame()
 
+if 'agg_result' not in st.session_state:
+      st.session_state.agg_result = pd.DataFrame()
+
 if 'new_columns' not in st.session_state:
     st.session_state.new_columns = []
 
@@ -1061,7 +1064,7 @@ def report():
 
 
 def aggregate():
-
+        
         # Let user select columns for grouping
         group_columns = st.multiselect("Select columns to group by:", st.session_state.df.columns)
 
@@ -1102,6 +1105,9 @@ def aggregate():
             
             # Perform groupby and aggregation
             result = st.session_state.df.groupby(group_columns).agg(agg_dict).reset_index()
+            del st.session_state.agg_result
+            st.session_state.agg_result = result
+
             st.session_state.agg_code = f'df.groupby({group_columns}).agg({agg_dict}).reset_index()'
             
             # Display the result
@@ -1253,6 +1259,7 @@ def dashboard_tab():
             
             st.session_state.agg_code = aggregate()
             st.session_state.agg_event = True
+            df = st.session_state.agg_result
 
         else:
             st.session_state.agg_event = False
