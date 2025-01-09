@@ -1130,35 +1130,34 @@ def aggregate():
 
 
 def dashboard_tab():
-    
+
+    # Check for saved results
+    st.session_state.tb = st.session_state.get('tb', {})
+    tb = pd.DataFrame(st.session_state.tb.items(), columns=['Key', 'Value'])
+    st.session_state.custom_title = st.text_input("Enter dashboard title:", "Dashboard", key = "tui_title")
+
+    with st.container(border = True):
+        # Let the user define the dashboard layout
+        rows = st.number_input("Number of rows", min_value=1, value=2)
+        cols = st.number_input("Number of columns", min_value=1, value=2)
+
+    # Create a list of cell positions
+    cell_positions = [f"{i+1}-{j+1}" for i in range(rows) for j in range(cols)]
+
+    # Store the layout in session state
+    if "layout" not in st.session_state or st.session_state.layout != {"rows": rows, "cols": cols, "cells": cell_positions}:
+        st.session_state.layout = {"rows": rows, "cols": cols, "cells": cell_positions}
+        st.session_state.charts = {}  # Reset charts on layout change
+
+    df = st.session_state.df
+    st.dataframe(df.head(5))
+
    
     
     tab1, tab2 = st.tabs(['TUI', 'GUI'])
 
     with tab1:#TUI
 
-        
-        
-        # Check for saved results
-        st.session_state.tb = st.session_state.get('tb', {})
-        tb = pd.DataFrame(st.session_state.tb.items(), columns=['Key', 'Value'])
-        st.session_state.custom_title = st.text_input("Enter dashboard title:", "Dashboard", key = "tui_title")
-
-        with st.container(border = True):
-            # Let the user define the dashboard layout
-            rows = st.number_input("Number of rows", min_value=1, value=2)
-            cols = st.number_input("Number of columns", min_value=1, value=2)
-
-        # Create a list of cell positions
-        cell_positions = [f"{i+1}-{j+1}" for i in range(rows) for j in range(cols)]
-
-        # Store the layout in session state
-        if "layout" not in st.session_state or st.session_state.layout != {"rows": rows, "cols": cols, "cells": cell_positions}:
-            st.session_state.layout = {"rows": rows, "cols": cols, "cells": cell_positions}
-            st.session_state.charts = {}  # Reset charts on layout change
-
-        df = st.session_state.df
-        st.dataframe(df.head(5))
         st.markdown(
             """
             <div style="
@@ -1240,27 +1239,6 @@ def dashboard_tab():
 
     with tab2: #GUI
         
-        
-        # Check for saved results
-        st.session_state.tb = st.session_state.get('tb', {})
-        tb = pd.DataFrame(st.session_state.tb.items(), columns=['Key', 'Value'])
-        st.session_state.custom_title = st.text_input("Enter dashboard title:", "Dashboard", key = "gui_title")
-
-        with st.container(border = True):
-            # Let the user define the dashboard layout
-            rows = st.number_input("Number of rows", min_value=1, value=2, key='rows_gui')
-            cols = st.number_input("Number of columns", min_value=1, value=2, key='cols_gui')
-
-        # Create a list of cell positions
-        cell_positions = [f"{i+1}-{j+1}" for i in range(rows) for j in range(cols)]
-
-        # Store the layout in session state
-        if "layout" not in st.session_state or st.session_state.layout != {"rows": rows, "cols": cols, "cells": cell_positions}:
-            st.session_state.layout = {"rows": rows, "cols": cols, "cells": cell_positions}
-            st.session_state.charts = {}  # Reset charts on layout change
-
-        df = st.session_state.df
-        st.dataframe(df.head(5))
 
         aggregate_choice = st.radio("Do you want to aggregate the dataset?", ("Yes", "No"))
         if aggregate_choice == "Yes":
