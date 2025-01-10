@@ -2,3 +2,5 @@
 maxUploadSize = 200
 [client]
 showSidebarNavigation = false
+[theme]
+base = "dark"
