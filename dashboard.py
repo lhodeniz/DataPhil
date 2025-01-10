@@ -1975,14 +1975,12 @@ def dashboard():
                 with col3:
                     st.button("Remove", key=f"remove_{i}", on_click=remove_filter, args=(i,))
         if st.button("Update Dashboard", key = "update"):
-            df = apply_filters(df)   
-
+            df = apply_filters(df)
 
 
  
 
 
-    
 
     if "rows" not in st.session_state.layout or "cols" not in st.session_state.layout:
         st.error("Dashboard layout is not configured. Please set it up first.")
@@ -2008,25 +2006,79 @@ def dashboard():
         unsafe_allow_html=True
     )
 
+
+    # Add a toggle button to show or hide the adjustment interface
+    if "show_adjustments" not in st.session_state:
+        st.session_state.show_adjustments = False
+
+    if st.button("Adjustments"):
+        st.session_state.show_adjustments = not st.session_state.show_adjustments 
+
+    if st.session_state.show_adjustments:
+      adjust_dashboard_layout()
+
+
+
+    layout_config = st.session_state.layout
+    num_rows = layout_config["rows"]
+    num_cols = layout_config["cols"]
+    column_widths = st.session_state.get("column_widths", [[50] * num_cols for _ in range(num_rows)])
+
+    # Render the dashboard with adjusted column widths
+    for row_index in range(num_rows):
+        # Normalize widths to sum up to the Streamlit column scale (12)
+        row_widths = column_widths[row_index]
+        normalized_widths = [int((w / sum(row_widths)) * 12) for w in row_widths]
+
+        # Create columns for the current row
+        row_columns = st.columns(normalized_widths)
     
 
-    for i in range(st.session_state.layout["rows"]):
-        cols = st.columns(st.session_state.layout["cols"])
-        for j, col in enumerate(cols):
-            cell = f"{i+1}-{j+1}"
-            if cell in st.session_state.charts:
-                chart_data = st.session_state.charts[cell]
-                with col:
-                    st.subheader(chart_data["title"])
-                    try:
-                        
-                        # Execute the custom code with the saved dataframe
-                        exec(chart_data["code"], {"df": df, "tb": st.session_state.tb, "st": st, "px":px, "plt": plt, "sns":sns, "alt": alt, "datetime": datetime, "go":go, "WordCloud": WordCloud})
-                    except Exception as e:
-                        st.error(f"Error executing custom code: {str(e)}")
-                        st.error(f"Chart data: {chart_data}")
+        for col_index, col in enumerate(row_columns):
 
-    
+                cell = f"{row_index+1}-{col_index+1}"
+                if cell in st.session_state.charts:
+                    chart_data = st.session_state.charts[cell]
+                    with col:
+                        st.subheader(chart_data["title"])
+                        try:
+                            
+                            # Execute the custom code with the saved dataframe
+                            exec(chart_data["code"], {"df": df, "tb": st.session_state.tb, "st": st, "px":px, "plt": plt, "sns":sns, "alt": alt, "datetime": datetime, "go":go, "WordCloud": WordCloud})
+                        except Exception as e:
+                            st.error(f"Error executing custom code: {str(e)}")
+                            st.error(f"Chart data: {chart_data}")
+
+
+
+
+
+
+
+def adjust_dashboard_layout():
+    """Function to adjust column widths for the dashboard layout."""
+    # Retrieve current layout dimensions
+    num_rows = st.session_state.layout.get("rows", 2)
+    num_cols = st.session_state.layout.get("cols", 2)
+
+    layout_widths = []
+    for row_index in range(num_rows):
+        st.write(f"Row {row_index + 1} column widths:")
+        row_widths = []
+        cols = st.columns(num_cols)  # Create a row of columns
+        for col_index, col in enumerate(cols):
+            with col:
+                col_width = st.slider(
+                    f"Col {col_index + 1}",
+                    min_value=0, max_value=100, value=50, step=5,
+                    key=f"slider_{row_index}_{col_index}"
+                )
+            row_widths.append(col_width)
+        layout_widths.append(row_widths)
+
+    # Save the column widths in session state
+    st.session_state.column_widths = layout_widths
+  
 
 
 def export_settings():
