@@ -98,6 +98,9 @@ if 'agg_code' not in st.session_state:
 if 'chart_code' not in st.session_state:
     st.session_state.chart_code =''
 
+if 'column_widths' not in st.session_state:
+    column_widths = []
+
 def add_or_update_function():
     func_name = st.session_state.function_name
     func_code = st.session_state.function_code
@@ -2022,16 +2025,29 @@ def dashboard():
     layout_config = st.session_state.layout
     num_rows = layout_config["rows"]
     num_cols = layout_config["cols"]
+
+    # Ensure column_widths is properly initialized
     column_widths = st.session_state.get("column_widths", [[50] * num_cols for _ in range(num_rows)])
 
-    # Render the dashboard with adjusted column widths
+    # Render the dashboard
     for row_index in range(num_rows):
-        # Normalize widths to sum up to the Streamlit column scale (12)
-        row_widths = column_widths[row_index]
-        normalized_widths = [int((w / sum(row_widths)) * 12) for w in row_widths]
+        if row_index >= len(column_widths):
+            # Handle missing rows in column_widths gracefully
+            st.warning(f"Row {row_index + 1} is missing in column_widths. Using default widths.")
+            row_widths = [50] * num_cols
+        else:
+            row_widths = column_widths[row_index]
+
+        # Normalize widths
+        if sum(row_widths) == 0:
+            st.error(f"Invalid widths in row {row_index + 1}. All values are zero.")
+            normalized_widths = [12 // num_cols] * num_cols  # Equal width as fallback
+        else:
+            normalized_widths = [int((w / sum(row_widths)) * 12) for w in row_widths]
 
         # Create columns for the current row
         row_columns = st.columns(normalized_widths)
+
     
 
         for col_index, col in enumerate(row_columns):
