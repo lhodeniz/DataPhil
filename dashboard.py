@@ -1226,6 +1226,8 @@ def dashboard_tab():
         with col1:
             # Let the user input their own code
             user_code = st.text_area("Enter your custom code for the chart:", value = f'agg_data = {st.session_state.agg_code}'+ "\n"+st.session_state.chart_code, height=200)
+            st.markdown("Check out [seaborn](https://seaborn.pydata.org/examples/index.html), [matplotlib](https://matplotlib.org/stable/gallery/index.html), [plotly](https://plotly.com/python/), and [altair](https://altair-viz.github.io/gallery/index.html).")
+
             
 
         with col2:
