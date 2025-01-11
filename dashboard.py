@@ -493,6 +493,11 @@ def upload_dataset():
     tab1, tab2, tab3 = st.tabs(['Single CSV', 'Join CSVs', 'to CSV'])
 
     with tab1:
+        #
+        @st.cache_data
+        def load_csv(file, encoding):
+            stringio = StringIO(file.getvalue().decode(encoding))
+            return pd.read_csv(stringio)
 
         # File uploader
         uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -504,15 +509,13 @@ def upload_dataset():
                 'cp1251', 'utf-16', 'utf-16-le', 'utf-16-be'
             ]
             
-            df = None  # Initialize the dataframe
-            successful_encoding = None  # Track the successful encoding
+            df = None
+            successful_encoding = None
             
             # Try reading the file with each encoding
             for encoding in encodings:
                 try:
-                    # Decode and read the CSV
-                    stringio = StringIO(uploaded_file.getvalue().decode(encoding))
-                    df = pd.read_csv(stringio)
+                    df = load_csv(uploaded_file, encoding)
                     successful_encoding = encoding
                     break  # Exit loop if successful
                 except (UnicodeDecodeError, pd.errors.ParserError):
@@ -520,35 +523,31 @@ def upload_dataset():
             
             if df is not None:
                 st.success(f"File successfully decoded using '{successful_encoding}' encoding!")
-
-            else:
-                st.error("Failed to decode the file with the attempted encodings. Please check the file's format and encoding.")
-        if uploaded_file is not None:
-            try:
+                
                 # Check if a new file is uploaded
-                if st.session_state.uploaded_file != uploaded_file.name:
+                if 'uploaded_file' not in st.session_state or st.session_state.uploaded_file != uploaded_file.name:
                     # Clear charts when a new dataset is uploaded
                     st.session_state.charts = {}
                     st.session_state.layout = {}  # Optionally reset layout as well
                     st.success("Dashboard charts have been reset due to new dataset upload.")
-
-
-                # Load the uploaded file into a DataFrame
-                st.session_state.df = pd.read_csv(uploaded_file)
-                st.session_state.uploaded_file = uploaded_file.name  # Save the file name in session state
-                st.session_state.original_columns = st.session_state.df.columns.tolist()
+                
+                st.session_state.df = df
+                st.session_state.uploaded_file = uploaded_file.name
+                st.session_state.original_columns = df.columns.tolist()
                 backup_df()  # Save a backup of the dataset
                 st.success(f"Dataset '{uploaded_file.name}' uploaded successfully!")
-                st.write(st.session_state.df.head())  # Display the first few rows of the DataFrame
-            except Exception as e:
-                st.error(f"An error occurred while loading the dataset: {str(e)}")
-        else:
-            if st.session_state.df.empty:
-                st.info("Please upload a dataset to proceed.")
+                st.write(df.head())  # Display the first few rows of the DataFrame
             else:
+                st.error("Failed to decode the file with the attempted encodings. Please check the file's format and encoding.")
+        else:
+            if 'df' in st.session_state and not st.session_state.df.empty:
                 # Display existing dataset if already uploaded
                 st.success(f"Using previously uploaded dataset: {st.session_state.uploaded_file}")
                 st.write(st.session_state.df.head())
+            else:
+                st.info("Please upload a dataset to proceed.")
+
+                
     with tab2:
         # File uploaders for two CSV files
         file1 = st.file_uploader("Upload first CSV file", type="csv")
