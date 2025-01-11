@@ -2238,13 +2238,13 @@ else:
             width: 60% !important;
         }
         [data-testid="stSelectbox"]{
-            width: 90% !important;
+            width: 100% !important;
         }
         [data-testid="stTextInput"]{
             width: 50% !important;
         }
         [data-testid="stNumberInput"]{
-            width: 50% !important;
+            width: 80% !important;
         }
         [data-testid="stSlider"],
         [data-testid="stDateInput"],
@@ -2252,7 +2252,7 @@ else:
             width: 100% !important;
         }
         div[data-baseweb="select"] {
-            width: 50% !important;
+            width: 100% !important;
         }
         div[data-baseweb="select"] > div {
             width: 100% !important;
