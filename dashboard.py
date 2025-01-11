@@ -547,7 +547,7 @@ def upload_dataset():
             else:
                 st.info("Please upload a dataset to proceed.")
 
-                
+
     with tab2:
         # File uploaders for two CSV files
         file1 = st.file_uploader("Upload first CSV file", type="csv")
@@ -1262,7 +1262,7 @@ def dashboard_tab():
                 "Map", "Pie Chart", "Histogram", "Box Plot", "Heatmap",
                 "Violin Chart", "Bubble Chart", "Sunburst Chart", "Treemap",
                 "Streamgraph", "Candlestick Chart", "Radar Chart", "WordCloud",
-                "Timeline Chart", "Density Chart", "Gauge Chart", "KPI Card"
+                "Timeline Chart", "Density Chart", "Gauge Chart", "KPI Card", "Text","Image","Video"
             ]
 
         st.session_state["chart_type"] = st.selectbox(
@@ -1889,7 +1889,55 @@ def dashboard_tab():
 
 
 
+        if chart_type == "Text":
 
+            # Text input
+            user_text = st.text_input("Enter your text:")
+
+            # Font size selection
+            font_size = st.slider("Select font size:", 10, 30, 16)
+
+            # Text style selection
+            bold = st.checkbox("Bold")
+            italic = st.checkbox("Italic")
+
+            # Display the styled text
+            if user_text:
+                style = f"font-size: {font_size}px;"
+                if bold:
+                    style += " font-weight: bold;"
+                if italic:
+                    style += " font-style: italic;"
+                
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    st.markdown(f"<p style='{style}'>{user_text}</p>", unsafe_allow_html=True)
+
+                    """)
+
+
+        if chart_type == "Image":
+
+            # Image link input
+            image_link = st.text_input("Enter image URL:")
+
+            if image_link:
+                # Image width slider
+                image_width = st.slider("Adjust image width:", 100, 800, 400)
+                
+                # Display the image with adjusted width
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    st.image("{image_link}", width={image_width})
+                    """)
+
+
+        if chart_type == "Video":
+
+            # Video link input
+            video_link = st.text_input("Enter YouTube video URL:")
+            if video_link:
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    st.video("{video_link}")
+                    """)
 
 
     # Ask for chart title and axis labels
