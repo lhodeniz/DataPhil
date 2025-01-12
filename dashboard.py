@@ -432,134 +432,158 @@ def new_columns():
 
 def export():
     
+    col1, col2 = st.columns(2)
+    with col1:
 
-    # File uploader for importing settings
-    json_file = st.file_uploader("Choose a settings file", type="json")
-    if json_file is not None:
-        st.session_state.json_file = json_file
-        settings_json = json_file.getvalue().decode("utf-8")
-        import_settings(settings_json)
+        with st.container(border = True):
+            st.subheader("Local")
 
-
-    # Ensure the dataframe is not empty
-    if 'df' in st.session_state and not st.session_state.df.empty:
-        # Check if uploaded_file exists in session state and is valid
-        uploaded_file = st.session_state.get('uploaded_file')
-        if uploaded_file:
-            # Generate the updated file name
-            file_name = "updated_" + uploaded_file  # Adding _updated to the original filename
-            file_name = file_name.replace(".csv", "_updated.csv")  # Ensure it has the .csv extension
-        else:
-            # Default filename if uploaded_file is None
-            file_name = "updated_dataset.csv"
-
-        # Convert DataFrame to CSV and offer it for download
-        csv_data = st.session_state.df.to_csv(index=False)
-
-        # Create a download button
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.download_button(
-            label="Download Updated Dataset",
-            data=csv_data,
-            file_name=file_name,
-            mime="text/csv"
-        )
-    else:
-        st.error("No dataset available for export. Please upload or create a dataset first.")
-
-    # Export settings functionality
-    if st.button('Export Settings'):
-        settings_json = export_settings()
-        st.download_button(
-            label="Download Settings",
-            data=settings_json,
-            file_name="app_settings.json",
-            mime="application/json"
-        )
-
-    # Initialize the S3 client
-    s3 = boto3.client(
-        's3',
-        aws_access_key_id='AKIAQUFLQN6S3NYTLU7Q',
-        aws_secret_access_key='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',
-        region_name='ap-southeast-2'
-    )
+            # File uploader for importing settings
+            json_file = st.file_uploader("Choose your local dashboard file", type="json")
+            if json_file is not None:
+                st.session_state.json_file = json_file
+                settings_json = json_file.getvalue().decode("utf-8")
+                import_settings(settings_json)
 
 
-    bucket_name = 'dataphil-bucket'
+            # Ensure the dataframe is not empty
+            if 'df' in st.session_state and not st.session_state.df.empty:
+                # Check if uploaded_file exists in session state and is valid
+                uploaded_file = st.session_state.get('uploaded_file')
+                if uploaded_file:
+                    # Generate the updated file name
+                    file_name = "updated_" + uploaded_file  # Adding _updated to the original filename
+                    file_name = file_name.replace(".csv", "_updated.csv")  # Ensure it has the .csv extension
+                else:
+                    # Default filename if uploaded_file is None
+                    file_name = "updated_dataset.csv"
 
-    settings_json = export_settings()
+                # Convert DataFrame to CSV and offer it for download
+                csv_data = st.session_state.df.to_csv(index=False)
 
+                # Create a download button
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.download_button(
+                    label="Download Dataset",
+                    data=csv_data,
+                    file_name=file_name,
+                    mime="text/csv"
+                )
+            else:
+                st.error("No dataset available for export. Please upload or create a dataset first.")
 
-    def upload_file_to_s3(data, bucket_name):
-        """
-        Uploads JSON data to an S3 bucket with a unique filename.
-        
-        :param data: The data to upload (e.g., JSON string from `export_settings()`).
-        :param bucket_name: The name of the S3 bucket.
-        :return: The public URL of the uploaded file or an error message.
-        """
-        try:
-            # Generate a unique filename using UUID
-            unique_filename = f"dashboard_{uuid.uuid4().hex}.json"
-            
-            # Convert the data (JSON string) into a file-like object
-            file_obj = io.BytesIO(data.encode('utf-8'))
-            
-            # Upload the file-like object to S3
-            s3.upload_fileobj(file_obj, bucket_name, unique_filename)
-            
-            # Generate the file's public URL
-            file_url = f"https://{bucket_name}.s3.ap-southeast-2.amazonaws.com/{unique_filename}"
-            return unique_filename
-        except Exception as e:
-            return f"Error: {e}"
-
-
-    # Upload the settings JSON to S3
-    if st.button("Upload your dashboard to the Cloud"):
-        result = upload_file_to_s3(settings_json, bucket_name)
-        result = result.replace('.json', '')
-        
-        if "Error" not in result:
-            st.write("File uploaded successfully!")
-            st.write("Your dashboard code:", result)  # Use the returned `unique_filename`
-        else:
-            st.write("An error occurred:", result)
+            # Export settings functionality
+            if st.button('Download dashboard'):
+                settings_json = export_settings()
+                st.download_button(
+                    label="Download Settings",
+                    data=settings_json,
+                    file_name="app_settings.json",
+                    mime="application/json"
+                )
 
 
 
 
-    
+    with col2:
 
-    def download_file_from_s3(bucket_name, file_name):
-        try:
-            # Create an in-memory bytes buffer
-            file_obj = io.BytesIO()
-            
-            # Download the file into the buffer
-            s3.download_fileobj(bucket_name, file_name, file_obj)
-            
-            # Reset the file pointer to the beginning
-            file_obj.seek(0)
-            
-            # Return the in-memory object
-            return file_obj
-        except Exception as e:
-            return f"Error: {e}"
+        with st.container(border = True):
 
-    filename = st.text_input("Enter dashboard code:")
-    if filename and st.button("Download from the Cloud"):
-        json_file = download_file_from_s3("dataphil-bucket", f"{filename}.json")
-        
-        if isinstance(json_file, io.BytesIO):
-            # Decode and process the file content
-            settings_json = json_file.getvalue().decode("utf-8")
-            st.session_state.json_file = json_file
-            import_settings(settings_json)
-            st.write("Dashboard loaded successfully!")
-        else:
-            st.write("An error occurred:", json_file)
+            st.subheader("Cloud")
+           
+            # Initialize the S3 client
+            s3 = boto3.client(
+                's3',
+                aws_access_key_id='AKIAQUFLQN6S3NYTLU7Q',
+                aws_secret_access_key='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',
+                region_name='ap-southeast-2'
+            )
+
+
+            bucket_name = 'dataphil-bucket'
+
+            settings_json = export_settings()
+
+
+            def upload_file_to_s3(data, bucket_name):
+                """
+                Uploads JSON data to an S3 bucket with a unique filename.
+                
+                :param data: The data to upload (e.g., JSON string from `export_settings()`).
+                :param bucket_name: The name of the S3 bucket.
+                :return: The public URL of the uploaded file or an error message.
+                """
+                try:
+                    # Generate a unique filename using UUID
+                    unique_filename = f"dashboard_{uuid.uuid4().hex}.json"
+                    
+                    # Convert the data (JSON string) into a file-like object
+                    file_obj = io.BytesIO(data.encode('utf-8'))
+                    
+                    # Upload the file-like object to S3
+                    s3.upload_fileobj(file_obj, bucket_name, unique_filename)
+                    
+                    # Generate the file's public URL
+                    file_url = f"https://{bucket_name}.s3.ap-southeast-2.amazonaws.com/{unique_filename}"
+                    return unique_filename
+                except Exception as e:
+                    return f"Error: {e}"
+
+
+            # Upload the settings JSON to S3
+            if st.button("Upload dashboard"):
+                result = upload_file_to_s3(settings_json, bucket_name)
+                result = result.replace('.json', '')
+                
+                if "Error" not in result:
+                    st.write("File uploaded successfully!")
+                    st.write("Your dashboard code:", result)  # Use the returned `unique_filename`
+                else:
+                    st.write("An error occurred:", result)
+
+
+
+            def download_file_from_s3(bucket_name, file_name):
+                try:
+                    # Create an in-memory bytes buffer
+                    file_obj = io.BytesIO()
+                    
+                    # Download the file into the buffer
+                    s3.download_fileobj(bucket_name, file_name, file_obj)
+                    
+                    # Reset the file pointer to the beginning
+                    file_obj.seek(0)
+                    
+                    # Return the in-memory object
+                    return file_obj
+                except Exception as e:
+                    return f"Error: {e}"
+
+
+
+            st.markdown(
+                """
+                <style>
+                .stTextInput {
+                    width: 100%; 
+                }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
+            filename = st.text_input("Enter dashboard code:")
+            if filename and st.button("Download from the Cloud"):
+                json_file = download_file_from_s3("dataphil-bucket", f"{filename}.json")
+                
+                if isinstance(json_file, io.BytesIO):
+                    # Decode and process the file content
+                    settings_json = json_file.getvalue().decode("utf-8")
+                    st.session_state.json_file = json_file
+                    import_settings(settings_json)
+                    st.write("Dashboard loaded successfully!")
+                else:
+                    st.write("An error occurred:", json_file)
 
 
 
@@ -2370,34 +2394,7 @@ def dataframe_to_csv(dataframe):
 if show_only_dashboard:
     dashboard()
 else:
-    # adjust width of elements
-    st.markdown("""
-        <style>
-        [data-testid="stFileUploader"]{
-            width: 60% !important;
-        }
-        [data-testid="stSelectbox"]{
-            width: 100% !important;
-        }
-        [data-testid="stTextInput"]{
-            width: 50% !important;
-        }
-        [data-testid="stNumberInput"]{
-            width: 80% !important;
-        }
-        [data-testid="stSlider"],
-        [data-testid="stDateInput"],
-        [data-testid="stTimeInput"] {
-            width: 100% !important;
-        }
-        div[data-baseweb="select"] {
-            width: 100% !important;
-        }
-        div[data-baseweb="select"] > div {
-            width: 100% !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
+
 
 
     # header
@@ -2407,7 +2404,7 @@ else:
             unsafe_allow_html=True)
 
     # sections
-    section_selection = st.pills("", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Settings", "Report", "Dashboard"])
+    section_selection = st.pills("", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Import/Export", "Report", "Dashboard"])
     # Display content based on sidebar selection
     if section_selection == "Upload Dataset":
         upload_dataset()
@@ -2421,7 +2418,7 @@ else:
     elif section_selection == "New Columns":
         new_columns()
 
-    elif section_selection == "Settings":
+    elif section_selection == "Import/Export":
         export()
 
     elif section_selection == "Report":
