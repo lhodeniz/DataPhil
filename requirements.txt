@@ -11,6 +11,4 @@ pyreadr>=0.4.0
 geopy
 seaborn
 matplotlib
-io
-uuid
 boto3
