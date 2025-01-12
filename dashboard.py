@@ -170,6 +170,9 @@ def fix():
         ["Convert Data Types", "Handle Missing Values", "Drop Duplicated Rows", "Edit Dataset"])
 
     with tab1:
+
+     st.markdown('<style>div.stSelectbox > div {width: 30%;}</style>', unsafe_allow_html=True)
+ 
      
      # Let user select a column
      column_to_convert = st.selectbox("Select a column to convert", st.session_state.df.columns)
@@ -207,6 +210,8 @@ def fix():
 
 
     with tab2:
+
+        st.markdown('<style>div.stSelectbox > div {width: 30%;}</style>', unsafe_allow_html=True)
         
         # Get columns with missing values
         columns_with_missing = st.session_state.df.columns[st.session_state.df.isnull().any()].tolist()
@@ -331,6 +336,8 @@ def new_columns():
 
 
         # Add a new column
+        st.markdown('<style>div.stTextInput > div {width: 50%;}</style>', unsafe_allow_html=True)
+
         new_col_name = st.text_input("Enter new column name:")
         new_col_value = st.text_input("Enter value or formula (use `df['column_name']` for existing columns):")
         st.write("Add your custom function from the sidebar and use it like this: `df['column_name'].apply(custom_function)`.")
@@ -384,6 +391,10 @@ def new_columns():
 
     with tab2:
 
+     st.markdown('<style>div.stMultiSelect > div {width: 30%;}</style>', unsafe_allow_html=True)
+
+
+
      
      new_columns = [col for col in st.session_state.df.columns if col not in st.session_state.original_columns]
      if new_columns:
@@ -404,6 +415,10 @@ def new_columns():
             st.info("No new columns available for deletion.")
 
     with tab3:
+        st.markdown('<style>div.stSelectbox > div {width: 30%;}</style>', unsafe_allow_html=True)
+        st.markdown('<style>div.stTextInput > div {width: 30%;}</style>', unsafe_allow_html=True)
+
+
         # Rename columns
         # Get list of current column names
         current_columns = st.session_state.df.columns.tolist()
