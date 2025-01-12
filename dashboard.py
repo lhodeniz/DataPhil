@@ -5,6 +5,7 @@ import streamlit as st
 import numpy as np
 import os
 import json
+import io
 from io import StringIO
 import base64
 from io import BytesIO
@@ -24,6 +25,7 @@ import datetime
 import plotly.graph_objects as go
 from wordcloud import WordCloud
 import boto3
+import uuid
 
 
 # page config
@@ -480,64 +482,84 @@ def export():
         's3',
         aws_access_key_id='AKIAQUFLQN6S3NYTLU7Q',
         aws_secret_access_key='duRJZMJAJaMeBgLGLAm/wL8BPuPUToHcgqdT3m9/',
-        region_name='ap-southeast-2'  # e.g., 'us-east-1'
+        region_name='ap-southeast-2'
     )
 
 
-    def upload_file_to_s3(file, bucket_name, file_name):
+    bucket_name = 'dataphil-bucket'
+
+    settings_json = export_settings()
+
+
+    def upload_file_to_s3(data, bucket_name):
+        """
+        Uploads JSON data to an S3 bucket with a unique filename.
+        
+        :param data: The data to upload (e.g., JSON string from `export_settings()`).
+        :param bucket_name: The name of the S3 bucket.
+        :return: The public URL of the uploaded file or an error message.
+        """
         try:
-            s3.upload_fileobj(file, bucket_name, file_name)
-            file_url = f"https://{bucket_name}.s3.{s3.meta.region_name}.amazonaws.com/{file_name}"
-            return file_url  # Public URL of the uploaded file
+            # Generate a unique filename using UUID
+            unique_filename = f"dashboard_{uuid.uuid4().hex}.json"
+            
+            # Convert the data (JSON string) into a file-like object
+            file_obj = io.BytesIO(data.encode('utf-8'))
+            
+            # Upload the file-like object to S3
+            s3.upload_fileobj(file_obj, bucket_name, unique_filename)
+            
+            # Generate the file's public URL
+            file_url = f"https://{bucket_name}.s3.ap-southeast-2.amazonaws.com/{unique_filename}"
+            return unique_filename
         except Exception as e:
             return f"Error: {e}"
 
 
-    st.title("Upload to S3")
+    # Upload the settings JSON to S3
+    if st.button("Upload your dashboard to the Cloud"):
+        result = upload_file_to_s3(settings_json, bucket_name)
+        result = result.replace('.json', '')
+        
+        if "Error" not in result:
+            st.write("File uploaded successfully!")
+            st.write("Your dashboard code:", result)  # Use the returned `unique_filename`
+        else:
+            st.write("An error occurred:", result)
 
-    uploaded_file = st.file_uploader("Choose a file")
-    if uploaded_file:
-        file_url = upload_file_to_s3(uploaded_file, "dataphil-bucket", uploaded_file.name)
-        st.write("File uploaded successfully!")
-        st.write("File URL:", file_url)
 
-    def download_file_from_s3(bucket_name, file_name, save_as):
+
+
+    
+
+    def download_file_from_s3(bucket_name, file_name):
         try:
-            s3.download_file(bucket_name, file_name, save_as)
-            return f"File {file_name} downloaded successfully as {save_as}"
+            # Create an in-memory bytes buffer
+            file_obj = io.BytesIO()
+            
+            # Download the file into the buffer
+            s3.download_fileobj(bucket_name, file_name, file_obj)
+            
+            # Reset the file pointer to the beginning
+            file_obj.seek(0)
+            
+            # Return the in-memory object
+            return file_obj
         except Exception as e:
             return f"Error: {e}"
 
-    # Usage in Streamlit
-    if st.button("Download Example File"):
-        result = download_file_from_s3("dataphil-bucket", "pie chart.csv", "downloaded_file.csv")
-        st.write(result)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    filename = st.text_input("Enter dashboard code:")
+    if filename and st.button("Download from the Cloud"):
+        json_file = download_file_from_s3("dataphil-bucket", f"{filename}.json")
+        
+        if isinstance(json_file, io.BytesIO):
+            # Decode and process the file content
+            settings_json = json_file.getvalue().decode("utf-8")
+            st.session_state.json_file = json_file
+            import_settings(settings_json)
+            st.write("Dashboard loaded successfully!")
+        else:
+            st.write("An error occurred:", json_file)
 
 
 
