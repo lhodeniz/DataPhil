@@ -23,6 +23,7 @@ import altair as alt
 import datetime
 import plotly.graph_objects as go
 from wordcloud import WordCloud
+import boto3
 
 
 # page config
@@ -473,6 +474,72 @@ def export():
             file_name="app_settings.json",
             mime="application/json"
         )
+
+    # Initialize the S3 client
+    s3 = boto3.client(
+        's3',
+        aws_access_key_id='AKIAQUFLQN6S3NYTLU7Q',
+        aws_secret_access_key='duRJZMJAJaMeBgLGLAm/wL8BPuPUToHcgqdT3m9/',
+        region_name='ap-southeast-2'  # e.g., 'us-east-1'
+    )
+
+
+    def upload_file_to_s3(file, bucket_name, file_name):
+        try:
+            s3.upload_fileobj(file, bucket_name, file_name)
+            file_url = f"https://{bucket_name}.s3.{s3.meta.region_name}.amazonaws.com/{file_name}"
+            return file_url  # Public URL of the uploaded file
+        except Exception as e:
+            return f"Error: {e}"
+
+
+    st.title("Upload to S3")
+
+    uploaded_file = st.file_uploader("Choose a file")
+    if uploaded_file:
+        file_url = upload_file_to_s3(uploaded_file, "dataphil-bucket", uploaded_file.name)
+        st.write("File uploaded successfully!")
+        st.write("File URL:", file_url)
+
+    def download_file_from_s3(bucket_name, file_name, save_as):
+        try:
+            s3.download_file(bucket_name, file_name, save_as)
+            return f"File {file_name} downloaded successfully as {save_as}"
+        except Exception as e:
+            return f"Error: {e}"
+
+    # Usage in Streamlit
+    if st.button("Download Example File"):
+        result = download_file_from_s3("dataphil-bucket", "pie chart.csv", "downloaded_file.csv")
+        st.write(result)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def read_csv_with_encodings(uploaded_file):
     """Reads a CSV file trying multiple encodings."""
