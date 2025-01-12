@@ -1054,7 +1054,12 @@ def generate_chart_code(chart_type, df_name='df'):
 def report():
      tab1, tab2, tab3 = st.tabs(["Tables", "Filters", "Visualization"])
  
-     with tab1: #Tables    
+     with tab1:
+        #Tables
+        st.markdown('<style>div.stSelectbox > div {width: 80%;}</style>', unsafe_allow_html=True)
+        st.markdown('<style>div.stMultiSelect > div {width: 60%;}</style>', unsafe_allow_html=True)
+
+
         
         # Let user select columns for grouping
         group_columns = st.multiselect("Select columns to group by:", st.session_state.df.columns)
@@ -1113,7 +1118,10 @@ def report():
         else:
             st.write("Please select grouping columns and add at least one aggregation.")
      
-     with tab2: #Filters
+     with tab2:
+        #Filters
+        st.markdown('<style>div.stSelectbox > div {width: 80%;}</style>', unsafe_allow_html=True)
+
         
         # Step 1: Select dataframe
         dataframe_options = ["Original Dataframe"] + list(st.session_state.get('tb', {}).keys())
@@ -1261,6 +1269,8 @@ def aggregate():
 
 
 def dashboard_tab():
+
+
 
     # Check for saved results
     st.session_state.tb = st.session_state.get('tb', {})
