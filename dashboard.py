@@ -622,152 +622,149 @@ def upload_dataset():
     tab1, tab2, tab3 = st.tabs(['Single CSV', 'Join CSVs', 'to CSV'])
 
     with tab1:
-        with st.container(border = True):
-            #
-            @st.cache_data
-            def load_csv(file, encoding):
-                stringio = StringIO(file.getvalue().decode(encoding))
-                return pd.read_csv(stringio)
+        #
+        @st.cache_data
+        def load_csv(file, encoding):
+            stringio = StringIO(file.getvalue().decode(encoding))
+            return pd.read_csv(stringio)
 
-            # File uploader
-            uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+        # File uploader
+        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 
-            if uploaded_file is not None:
-                # List of possible encodings
-                encodings = [
-                    'utf-8', 'utf-8-sig', 'iso-8859-1', 'latin1', 'cp1252',
-                    'cp1251', 'utf-16', 'utf-16-le', 'utf-16-be'
-                ]
+        if uploaded_file is not None:
+            # List of possible encodings
+            encodings = [
+                'utf-8', 'utf-8-sig', 'iso-8859-1', 'latin1', 'cp1252',
+                'cp1251', 'utf-16', 'utf-16-le', 'utf-16-be'
+            ]
+            
+            df = None
+            successful_encoding = None
+            
+            # Try reading the file with each encoding
+            for encoding in encodings:
+                try:
+                    df = load_csv(uploaded_file, encoding)
+                    successful_encoding = encoding
+                    break  # Exit loop if successful
+                except (UnicodeDecodeError, pd.errors.ParserError):
+                    continue  # Try the next encoding if this one fails
+            
+            if df is not None:
+                st.success(f"File successfully decoded using '{successful_encoding}' encoding!")
                 
-                df = None
-                successful_encoding = None
+                # Check if a new file is uploaded
+                if 'uploaded_file' not in st.session_state or st.session_state.uploaded_file != uploaded_file.name:
+                    # Clear charts when a new dataset is uploaded
+                    st.session_state.charts = {}
+                    st.session_state.layout = {}  # Optionally reset layout as well
+                    st.success("Dashboard charts have been reset due to new dataset upload.")
                 
-                # Try reading the file with each encoding
-                for encoding in encodings:
-                    try:
-                        df = load_csv(uploaded_file, encoding)
-                        successful_encoding = encoding
-                        break  # Exit loop if successful
-                    except (UnicodeDecodeError, pd.errors.ParserError):
-                        continue  # Try the next encoding if this one fails
-                
-                if df is not None:
-                    st.success(f"File successfully decoded using '{successful_encoding}' encoding!")
-                    
-                    # Check if a new file is uploaded
-                    if 'uploaded_file' not in st.session_state or st.session_state.uploaded_file != uploaded_file.name:
-                        # Clear charts when a new dataset is uploaded
-                        st.session_state.charts = {}
-                        st.session_state.layout = {}  # Optionally reset layout as well
-                        st.success("Dashboard charts have been reset due to new dataset upload.")
-                    
-                    st.session_state.df = df
-                    st.session_state.uploaded_file = uploaded_file.name
-                    st.session_state.original_columns = df.columns.tolist()
-                    backup_df()  # Save a backup of the dataset
-                    st.success(f"Dataset '{uploaded_file.name}' uploaded successfully!")
-                    st.write(df.head())  # Display the first few rows of the DataFrame
-                else:
-                    st.error("Failed to decode the file with the attempted encodings. Please check the file's format and encoding.")
+                st.session_state.df = df
+                st.session_state.uploaded_file = uploaded_file.name
+                st.session_state.original_columns = df.columns.tolist()
+                backup_df()  # Save a backup of the dataset
+                st.success(f"Dataset '{uploaded_file.name}' uploaded successfully!")
+                st.write(df.head())  # Display the first few rows of the DataFrame
             else:
-                if 'df' in st.session_state and not st.session_state.df.empty:
-                    # Display existing dataset if already uploaded
-                    st.success(f"Using previously uploaded dataset: {st.session_state.uploaded_file}")
-                    st.write(st.session_state.df.head())
-                else:
-                    st.info("Please upload a dataset to proceed.")
+                st.error("Failed to decode the file with the attempted encodings. Please check the file's format and encoding.")
+        else:
+            if 'df' in st.session_state and not st.session_state.df.empty:
+                # Display existing dataset if already uploaded
+                st.success(f"Using previously uploaded dataset: {st.session_state.uploaded_file}")
+                st.write(st.session_state.df.head())
+            else:
+                st.info("Please upload a dataset to proceed.")
 
 
     with tab2:
-        with st.container(border = True):
-            # File uploaders for two CSV files
-            file1 = st.file_uploader("Upload first CSV file", type="csv")
-            file2 = st.file_uploader("Upload second CSV file", type="csv")
+        # File uploaders for two CSV files
+        file1 = st.file_uploader("Upload first CSV file", type="csv")
+        file2 = st.file_uploader("Upload second CSV file", type="csv")
 
-            if file1 is not None and file2 is not None:
-                # Read the first CSV file
-                df1, encoding1 = read_csv_with_encodings(file1)
-                if df1 is None:
-                    st.error("Failed to decode the first file with the attempted encodings.")
-                else:
-                    st.success(f"First file successfully decoded using '{encoding1}' encoding!")
-                    st.dataframe(df1.head())
+        if file1 is not None and file2 is not None:
+            # Read the first CSV file
+            df1, encoding1 = read_csv_with_encodings(file1)
+            if df1 is None:
+                st.error("Failed to decode the first file with the attempted encodings.")
+            else:
+                st.success(f"First file successfully decoded using '{encoding1}' encoding!")
+                st.dataframe(df1.head())
 
-                # Read the second CSV file
-                df2, encoding2 = read_csv_with_encodings(file2)
-                if df2 is None:
-                    st.error("Failed to decode the second file with the attempted encodings.")
-                else:
-                    st.success(f"Second file successfully decoded using '{encoding2}' encoding!")
-                    st.dataframe(df2.head())
+            # Read the second CSV file
+            df2, encoding2 = read_csv_with_encodings(file2)
+            if df2 is None:
+                st.error("Failed to decode the second file with the attempted encodings.")
+            else:
+                st.success(f"Second file successfully decoded using '{encoding2}' encoding!")
+                st.dataframe(df2.head())
 
-                if df1 is not None and df2 is not None:
-                    # Allow user to select columns for joining
-                    join_column1 = st.selectbox("Select join column from first file", df1.columns)
-                    join_column2 = st.selectbox("Select join column from second file", df2.columns)
-                    
-                    # Allow user to select join type
-                    join_type = st.selectbox("Select join type", ["inner", "outer", "left", "right"])
-                    
-                    # Perform the join operation
-                    joined_df = pd.merge(df1, df2, left_on=join_column1, right_on=join_column2, how=join_type)
-                    
-                    # Display the joined DataFrame
-                    st.dataframe(joined_df.head(20))
-                    st.markdown(f"Rows: {joined_df.shape[0]:,}  \nColumns: {joined_df.shape[1]:,}")
-                    
-                    # Convert DataFrame to CSV
-                    csv = joined_df.to_csv(index=False)
-                    
-                    # Create download button
-                    st.download_button(
-                        label="Download joined data as CSV",
-                        data=csv,
-                        file_name="joined_data.csv",
-                        mime="text/csv",
-                    )
+            if df1 is not None and df2 is not None:
+                # Allow user to select columns for joining
+                join_column1 = st.selectbox("Select join column from first file", df1.columns)
+                join_column2 = st.selectbox("Select join column from second file", df2.columns)
+                
+                # Allow user to select join type
+                join_type = st.selectbox("Select join type", ["inner", "outer", "left", "right"])
+                
+                # Perform the join operation
+                joined_df = pd.merge(df1, df2, left_on=join_column1, right_on=join_column2, how=join_type)
+                
+                # Display the joined DataFrame
+                st.dataframe(joined_df.head(20))
+                st.markdown(f"Rows: {joined_df.shape[0]:,}  \nColumns: {joined_df.shape[1]:,}")
+                
+                # Convert DataFrame to CSV
+                csv = joined_df.to_csv(index=False)
+                
+                # Create download button
+                st.download_button(
+                    label="Download joined data as CSV",
+                    data=csv,
+                    file_name="joined_data.csv",
+                    mime="text/csv",
+                )
     with tab3:
-        with st.container(border = True):
-            # Supported file formats
-            supported_formats = ["xls", "xlsx", "xlt", "ods", "tsv", "sas7bdat", "sav", "mat", "rdata", "table"]
+        # Supported file formats
+        supported_formats = ["xls", "xlsx", "xlt", "ods", "tsv", "sas7bdat", "sav", "mat", "rdata", "table"]
 
-            # Streamlit file uploader
-            uploaded_files = st.file_uploader(
-                "Upload files in any supported format", 
-                type=supported_formats, 
-                accept_multiple_files=True
-            )
+        # Streamlit file uploader
+        uploaded_files = st.file_uploader(
+            "Upload files in any supported format", 
+            type=supported_formats, 
+            accept_multiple_files=True
+        )
 
-            if st.button("Convert to CSV"):
-                if uploaded_files:
-                    csv_files = []
-                    for file in uploaded_files:
-                        try:
-                            file_type = file.name.rsplit('.', 1)[-1].lower()
-                            df = convert_to_dataframe(file, file_type)
-                            csv_data = dataframe_to_csv(df)
-                            csv_files.append((file.name.rsplit('.', 1)[0] + '.csv', csv_data))
-                        except Exception as e:
-                            st.error(f"Failed to process {file.name}: {e}")
+        if st.button("Convert to CSV"):
+            if uploaded_files:
+                csv_files = []
+                for file in uploaded_files:
+                    try:
+                        file_type = file.name.rsplit('.', 1)[-1].lower()
+                        df = convert_to_dataframe(file, file_type)
+                        csv_data = dataframe_to_csv(df)
+                        csv_files.append((file.name.rsplit('.', 1)[0] + '.csv', csv_data))
+                    except Exception as e:
+                        st.error(f"Failed to process {file.name}: {e}")
 
-                    if csv_files:
-                        # Create a zip file containing all CSV files
-                        zip_buffer = BytesIO()
-                        with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                            for filename, data in csv_files:
-                                zip_file.writestr(filename, data)
+                if csv_files:
+                    # Create a zip file containing all CSV files
+                    zip_buffer = BytesIO()
+                    with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                        for filename, data in csv_files:
+                            zip_file.writestr(filename, data)
 
-                        # Offer the zip file for download
-                        st.download_button(
-                            label="Download CSV files",
-                            data=zip_buffer.getvalue(),
-                            file_name="converted_files.zip",
-                            mime="application/zip"
-                        )
-                    else:
-                        st.warning("No valid files to process.")
+                    # Offer the zip file for download
+                    st.download_button(
+                        label="Download CSV files",
+                        data=zip_buffer.getvalue(),
+                        file_name="converted_files.zip",
+                        mime="application/zip"
+                    )
                 else:
-                    st.warning("Please upload some files first.")
+                    st.warning("No valid files to process.")
+            else:
+                st.warning("Please upload some files first.")
 
 
 
