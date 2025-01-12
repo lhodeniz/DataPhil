@@ -329,7 +329,8 @@ def new_columns():
 
         # Add a new column
         new_col_name = st.text_input("Enter new column name:")
-        new_col_value = st.text_input("Enter value or formula (use df['column_name'] for existing columns):")
+        new_col_value = st.text_input("Enter value or formula (use `df['column_name']` for existing columns):")
+        st.write("Add your custom function from the sidebar and use it like this: `df['column_name'].apply(custom_function)`.")
 
         if st.button("Add new column", key="add_new_column_bt"):
             if new_col_name and new_col_value:
