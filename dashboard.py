@@ -2065,6 +2065,15 @@ def dashboard_tab():
             bold = st.checkbox("Bold")
             italic = st.checkbox("Italic")
 
+            # Hyperlink option
+            add_link = st.checkbox("Add a hyperlink")
+
+            if add_link:
+                link_text = st.text_input("Enter the text to be linked:")
+                link_url = st.text_input("Enter the URL:")
+                if not link_url.startswith(('http://', 'https://')):
+                    link_url = 'https://' + link_url
+
             # Display the styled text
             if user_text:
                 style = f"font-size: {font_size}px;"
@@ -2073,10 +2082,15 @@ def dashboard_tab():
                 if italic:
                     style += " font-style: italic;"
                 
+                if add_link and link_text and link_url:
+                    user_text = user_text.replace(link_text, f"<a href='{link_url}'>{link_text}</a>")
+                
                 st.session_state.chart_code = textwrap.dedent(f"""
                     st.markdown(f"<p style='{style}'>{user_text}</p>", unsafe_allow_html=True)
-
                     """)
+
+                # Display the styled text
+                st.markdown(f"<p style='{style}'>{user_text}</p>", unsafe_allow_html=True)
 
 
         if chart_type == "Image":
