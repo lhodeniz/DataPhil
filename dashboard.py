@@ -140,10 +140,33 @@ def summary():
         st.markdown(f"Rows: {st.session_state.df.shape[0]:,}  \nColumns: {st.session_state.df.shape[1]:,}")
 
     with tab2:
+        #
         df_dtypes = st.session_state.df.dtypes.reset_index()
         df_dtypes.columns = ['Column', 'Type']
-        df_dtypes.index = df_dtypes.index + 1
-        st.write(df_dtypes)
+
+        # Group by 'Type' and create separate dataframes
+        grouped = df_dtypes.groupby('Type')
+
+
+        # Display each group separately
+        col1, col2, col3, col4, col5, col6 = st.columns(6)
+        columns = [col1, col2, col3, col4, col5, col6]
+
+        # Display each group separately
+        for i, (dtype, group) in enumerate(grouped):
+            with columns[i % 6]:
+                #
+                st.markdown(f"<h5><span>type:</span> <span style='color: lightgreen;'>{dtype}</span></h5>", unsafe_allow_html=True)
+                column_names = group['Column'].tolist()
+                for j, column in enumerate(column_names, 1):
+                    st.write(f"{j}. {column}")
+                st.write("")
+
+
+
+
+
+
 
     with tab3:
         st.write(st.session_state.df.describe())
