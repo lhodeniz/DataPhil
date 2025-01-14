@@ -26,6 +26,7 @@ import plotly.graph_objects as go
 from wordcloud import WordCloud
 import boto3
 import uuid
+import hashlib
 
 
 # page config
@@ -104,6 +105,7 @@ if 'chart_code' not in st.session_state:
 if 'column_widths' not in st.session_state:
     column_widths = []
 
+
 def add_or_update_function():
     func_name = st.session_state.function_name
     func_code = st.session_state.function_code
@@ -118,7 +120,10 @@ def remove_function():
         del st.session_state.custom_functions[func_name]
         st.success(f"Function '{func_name}' removed successfully!")
 
-
+def calculate_df_hash(df):
+    """Calculate a hash for the given DataFrame."""
+    df_string = df.to_json()  # Convert to a JSON string
+    return hashlib.md5(df_string.encode()).hexdigest()
 
 def backup_df():
     if 'df_backup' not in st.session_state or not st.session_state.df_backup.equals(st.session_state.df):
@@ -568,16 +573,29 @@ def export():
                     return f"Error: {e}"
 
 
+
+            if "df_hash" not in st.session_state:
+                st.session_state.df_hash = calculate_df_hash(st.session_state.df)
+
             # Upload the settings JSON to S3
             if st.button("Upload dashboard"):
-                result = upload_file_to_s3(settings_json, bucket_name)
-                result = result.replace('.json', '')
-                
-                if "Error" not in result:
-                    st.write("File uploaded successfully!")
-                    st.write("Your dashboard code:", result)  # Use the returned `unique_filename`
+
+                # Check if the DataFrame has changed
+                current_hash = calculate_df_hash(st.session_state.df)
+                if current_hash != st.session_state.df_hash:
+                    # Proceed with upload
+                    result = upload_file_to_s3(settings_json, bucket_name)
+                    result = result.replace('.json', '')
+
+                    if "Error" not in result:
+                        st.session_state.df_hash = current_hash  # Update stored hash
+                        st.write("File uploaded successfully!")
+                        st.write("Your dashboard code:", result)
+                    else:
+                        st.write("An error occurred:", result)
                 else:
-                    st.write("An error occurred:", result)
+                    st.write("No changes detected in the dataset. File upload skipped.")
+
 
 
 
