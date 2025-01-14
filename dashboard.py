@@ -28,6 +28,8 @@ import boto3
 import uuid
 import hashlib
 import time
+import re
+
 
 # page config
 st.set_page_config(page_title="DataPhil", layout="wide", initial_sidebar_state="collapsed")
@@ -346,19 +348,91 @@ def fix():
                 st.session_state.df.drop_duplicates(inplace=True)
                 st.success("All duplicate rows have been dropped.")
                 backup_df()
+    
     with tab4:
 
-        # Display the DataFrame using st.data_editor
-        edited_df = st.data_editor(
-            st.session_state.df,
-            num_rows="dynamic",
-            key="data_editor"
-        )
+        st.markdown('<style>div.stTextInput > div {width: 30%;}</style>', unsafe_allow_html=True)
 
-        # Save button to update session state
-        if st.button("Save"):
-            st.session_state.df = edited_df
-            st.success("Changes saved to session state")
+
+        # Initialize session state variables
+        if 'search_results' not in st.session_state:
+            st.session_state.search_results = []
+        if 'current_index' not in st.session_state:
+            st.session_state.current_index = 0
+
+        # Column selection
+        search_column = st.selectbox("Select column to search", st.session_state.df.columns)
+
+        # Add a checkbox for wildcard search
+        use_wildcard = st.checkbox("Use wildcard search")
+
+
+        if use_wildcard:
+
+            st.info("""
+                Wildcard Search Examples:
+                - Use * to match any number of characters
+                - Use ? to match a single character
+                
+                Examples:
+                - "50*" matches: 50, 500, 5000
+                - "?50" matches: 150, 250, 350
+                - "5?0" matches: 500, 510, 520
+                """)
+
+
+        # Search input
+        search_term = st.text_input("Enter search term")
+
+        # Search button
+        if st.button("Search"):
+            if search_term:
+                if use_wildcard:
+
+                    # Convert wildcard pattern to regex
+                    search_pattern = search_term.replace("*", ".*").replace("?", ".")
+                    regex = re.compile(f"^{search_pattern}$", re.IGNORECASE)
+                    filtered_df = st.session_state.df[st.session_state.df[search_column].astype(str).apply(lambda x: bool(regex.match(x)))]
+                else:
+                    # Exact match search
+                    filtered_df = st.session_state.df[st.session_state.df[search_column].astype(str).eq(search_term)]
+                
+                st.session_state.search_results = filtered_df.index.tolist()
+                st.session_state.current_index = 0
+                st.rerun()
+            else:
+                st.warning("Please enter a search term")
+
+        # Display and edit results one by one
+        if st.session_state.search_results:
+            st.write(f"Result {st.session_state.current_index + 1} of {len(st.session_state.search_results)}")
+            
+            current_row_index = st.session_state.search_results[st.session_state.current_index]
+            current_row = st.session_state.df.loc[[current_row_index]]
+            
+            edited_row = st.data_editor(current_row, key=f"editor_{st.session_state.current_index}")
+            
+            col1, col2, col3 = st.columns([1, 2, 1])
+
+            with col1:
+                if st.button("Previous", use_container_width=True) and st.session_state.current_index > 0:
+                    st.session_state.current_index -= 1
+                    st.rerun()
+
+            with col2:
+                if st.button("Save Changes", use_container_width=True):
+                    st.session_state.df.loc[current_row_index] = edited_row.iloc[0]
+                    st.success("Changes saved to the original dataset")
+                    st.rerun()
+
+            with col3:
+                if st.button("Next", use_container_width=True) and st.session_state.current_index < len(st.session_state.search_results) - 1:
+                    st.session_state.current_index += 1
+                    st.rerun()
+            
+
+        else:
+            st.info("No search results to display. Please perform a search.")
 
 def new_columns():
     
