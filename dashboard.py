@@ -27,7 +27,7 @@ from wordcloud import WordCloud
 import boto3
 import uuid
 import hashlib
-
+import time
 
 # page config
 st.set_page_config(page_title="DataPhil", layout="wide", initial_sidebar_state="collapsed")
@@ -124,6 +124,26 @@ def calculate_df_hash(df):
     """Calculate a hash for the given DataFrame."""
     df_string = df.to_json()  # Convert to a JSON string
     return hashlib.md5(df_string.encode()).hexdigest()
+
+def calculate_dashboard_hash(layout, charts):
+    """Calculate a hash for the dashboard layout and charts."""
+    def make_serializable(obj):
+        """Helper function to convert non-serializable objects to strings."""
+        if isinstance(obj, (dict, list, str, int, float, bool, type(None))):
+            return obj
+        return str(obj)  # Convert other types to strings
+
+    # Preprocess the layout and charts to ensure serializability
+    serializable_layout = json.loads(json.dumps(layout, default=make_serializable))
+    serializable_charts = json.loads(json.dumps(charts, default=make_serializable))
+    
+    dashboard_state = {
+        "layout": serializable_layout,
+        "charts": serializable_charts
+    }
+    dashboard_json = json.dumps(dashboard_state, sort_keys=True)
+    return hashlib.md5(dashboard_json.encode()).hexdigest()
+
 
 def backup_df():
     if 'df_backup' not in st.session_state or not st.session_state.df_backup.equals(st.session_state.df):
@@ -548,53 +568,60 @@ def export():
             settings_json = export_settings()
 
 
+
             def upload_file_to_s3(data, bucket_name):
-                """
-                Uploads JSON data to an S3 bucket with a unique filename.
-                
-                :param data: The data to upload (e.g., JSON string from `export_settings()`).
-                :param bucket_name: The name of the S3 bucket.
-                :return: The public URL of the uploaded file or an error message.
-                """
                 try:
-                    # Generate a unique filename using UUID
                     unique_filename = f"dashboard_{uuid.uuid4().hex}.json"
-                    
-                    # Convert the data (JSON string) into a file-like object
                     file_obj = io.BytesIO(data.encode('utf-8'))
                     
-                    # Upload the file-like object to S3
+                    # Create a progress bar
+                    progress_bar = st.progress(0)
+                    
+                    # Simulate upload progress
+                    for percent_complete in range(100):
+                        time.sleep(0.01)  # Simulate some work being done
+                        progress_bar.progress(percent_complete + 1)
+                    
+                    # Actual upload
                     s3.upload_fileobj(file_obj, bucket_name, unique_filename)
                     
-                    # Generate the file's public URL
                     file_url = f"https://{bucket_name}.s3.ap-southeast-2.amazonaws.com/{unique_filename}"
                     return unique_filename
                 except Exception as e:
                     return f"Error: {e}"
 
-
-
             if "df_hash" not in st.session_state:
                 st.session_state.df_hash = calculate_df_hash(st.session_state.df)
 
-            # Upload the settings JSON to S3
-            if st.button("Upload dashboard"):
 
-                # Check if the DataFrame has changed
+            if "dashboard_hash" not in st.session_state:
+                st.session_state.dashboard_hash = calculate_dashboard_hash(
+                    st.session_state.layout, st.session_state.charts
+                )
+
+
+            if st.button("Upload dashboard"):
                 current_hash = calculate_df_hash(st.session_state.df)
-                if current_hash != st.session_state.df_hash:
-                    # Proceed with upload
-                    result = upload_file_to_s3(settings_json, bucket_name)
+                current_dashboard_hash = calculate_dashboard_hash(
+                    st.session_state.layout, st.session_state.charts
+                )
+
+                if current_hash != st.session_state.df_hash or current_dashboard_hash != st.session_state.dashboard_hash:
+                    with st.spinner('Uploading...'):
+                        result = upload_file_to_s3(settings_json, bucket_name)
                     result = result.replace('.json', '')
 
+                    # Update hashes after successful upload
                     if "Error" not in result:
-                        st.session_state.df_hash = current_hash  # Update stored hash
-                        st.write("File uploaded successfully!")
+                        st.session_state.df_hash = current_hash
+                        st.session_state.dashboard_hash = current_dashboard_hash
+                        st.success("File uploaded successfully!")
+
                         st.write("Your dashboard code:", result)
                     else:
-                        st.write("An error occurred:", result)
+                        st.error(f"An error occurred: {result}")
                 else:
-                    st.write("No changes detected in the dataset. File upload skipped.")
+                    st.info("No changes detected in the dataset. File upload skipped.")
 
 
 
