@@ -261,43 +261,53 @@ def fix():
         ["Convert Data Types", "Handle Missing Values", "Drop Duplicated Rows", "Edit Dataset"])
 
     with tab1:
+        #
 
-     st.markdown('<style>div.stSelectbox > div {width: 30%;}</style>', unsafe_allow_html=True)
- 
-     
-     # Let user select a column
-     column_to_convert = st.selectbox("Select a column to convert", st.session_state.df.columns)
-     
-     # Let user select the desired data type
-     data_types = ["string", "datetime", "integer", "float"]
-     new_type = st.selectbox("Select the new data type", data_types)
-     
-     # If datetime is selected, show format input
-     if new_type == "datetime":
-         date_format = st.text_input(
-             "Enter the date format (e.g., '%m-%d-%Y', '%Y-%m-%d', or 'mixed' for automatic parsing)",
-             value="mixed"
-         )
-     
-     if st.button("Convert", key="convert_type_bt"):
-         try:
-             if new_type == "string":
-                 st.session_state.df[column_to_convert] = st.session_state.df[column_to_convert].astype(str)
-             elif new_type == "datetime":
-                 if date_format.lower() == 'mixed':
-                    st.session_state.df[column_to_convert] = pd.to_datetime(st.session_state.df[column_to_convert], errors='coerce')
-                 else:
-                    st.session_state.df[column_to_convert] = pd.to_datetime(st.session_state.df[column_to_convert], format=date_format)
-             elif new_type == "integer":
-                 st.session_state.df[column_to_convert] = st.session_state.df[column_to_convert].astype(int)
-             elif new_type == "float":
-                 st.session_state.df[column_to_convert] = st.session_state.df[column_to_convert].astype(float)
-             
-             st.success(f"Column '{column_to_convert}' converted to {new_type}")
-             backup_df()        
-        
-         except Exception as e:
-             st.error(f"Error converting column: {str(e)}")
+        @st.cache_data
+        def get_column_names(df):
+            return df.columns.tolist()
+
+        @st.cache_data
+        def convert_column(df, column_to_convert, new_type, date_format=None):
+            df = df.copy()
+            try:
+                if new_type == "string":
+                    df[column_to_convert] = df[column_to_convert].astype(str)
+                elif new_type == "datetime":
+                    if date_format.lower() == 'mixed':
+                        df[column_to_convert] = pd.to_datetime(df[column_to_convert], errors='coerce')
+                    else:
+                        df[column_to_convert] = pd.to_datetime(df[column_to_convert], format=date_format)
+                elif new_type == "integer":
+                    df[column_to_convert] = df[column_to_convert].astype(int)
+                elif new_type == "float":
+                    df[column_to_convert] = df[column_to_convert].astype(float)
+                return df, None
+            except Exception as e:
+                return df, str(e)
+
+        st.markdown('<style>div.stSelectbox > div {width: 30%;}</style>', unsafe_allow_html=True)
+
+        column_names = get_column_names(st.session_state.df)
+        column_to_convert = st.selectbox("Select a column to convert", column_names)
+
+        data_types = ["string", "datetime", "integer", "float"]
+        new_type = st.selectbox("Select the new data type", data_types)
+
+        date_format = None
+        if new_type == "datetime":
+            date_format = st.text_input(
+                "Enter the date format (e.g., '%m-%d-%Y', '%Y-%m-%d', or 'mixed' for automatic parsing)",
+                value="mixed"
+            )
+
+        if st.button("Convert", key="convert_type_bt"):
+            st.session_state.df, error = convert_column(st.session_state.df, column_to_convert, new_type, date_format)
+            if error:
+                st.error(f"Error converting column: {error}")
+            else:
+                st.success(f"Column '{column_to_convert}' converted to {new_type}")
+                backup_df()
 
 
     with tab2:
