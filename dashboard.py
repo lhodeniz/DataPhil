@@ -666,21 +666,24 @@ def export():
 
 
             # Ensure the dataframe is not empty
-            if 'df' in st.session_state and not st.session_state.df.empty:
-                # Check if uploaded_file exists in session state and is valid
-                uploaded_file = st.session_state.get('uploaded_file')
+
+            @st.cache_data
+            def convert_df_to_csv(df):
+                return df.to_csv(index=False).encode('utf-8')
+
+            @st.cache_data
+            def generate_file_name(uploaded_file):
                 if uploaded_file:
-                    # Generate the updated file name
-                    file_name = "updated_" + uploaded_file  # Adding _updated to the original filename
-                    file_name = file_name.replace(".csv", "_updated.csv")  # Ensure it has the .csv extension
-                else:
-                    # Default filename if uploaded_file is None
-                    file_name = "updated_dataset.csv"
+                    file_name = "updated_" + uploaded_file
+                    return file_name.replace(".csv", "_updated.csv")
+                return "updated_dataset.csv"
 
-                # Convert DataFrame to CSV and offer it for download
-                csv_data = st.session_state.df.to_csv(index=False)
+            if 'df' in st.session_state and not st.session_state.df.empty:
+                uploaded_file = st.session_state.get('uploaded_file')
+                file_name = generate_file_name(uploaded_file)
 
-                # Create a download button
+                csv_data = convert_df_to_csv(st.session_state.df)
+
                 st.markdown("<br>", unsafe_allow_html=True)
                 st.download_button(
                     label="Download Dataset",
@@ -693,14 +696,13 @@ def export():
 
             # Export settings functionality
             if st.button('Download dashboard'):
-                settings_json = export_settings()
+                settings_json = export_settings()  
                 st.download_button(
                     label="Download Settings",
                     data=settings_json,
                     file_name="app_settings.json",
                     mime="application/json"
                 )
-
 
 
 
@@ -2577,6 +2579,10 @@ def import_settings(settings_json):
         if df_dict and 'data' in df_dict and 'columns' in df_dict:
             # Rebuild DataFrame using the unpacking operator for 'split' orientation
             st.session_state.df = pd.DataFrame(data=df_dict['data'], columns=df_dict['columns'])
+            df = st.session_state.df
+            st.session_state.selected_df = df
+
+
             if 'index' in df_dict:
                 st.session_state.df.index = pd.Index(df_dict['index'])
         else:
@@ -2610,6 +2616,9 @@ def import_settings(settings_json):
         st.success("Settings imported successfully!")
     except Exception as e:
         st.error(f"Error importing settings: {e}")
+
+
+
 
 
 def convert_to_dataframe(file, file_type):
