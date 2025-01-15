@@ -388,18 +388,28 @@ def fix():
 
     with tab3:
         
-        # Check for duplicate rows
-        duplicate_rows = st.session_state.df.duplicated()
-        num_duplicates = duplicate_rows.sum()
-        
+        @st.cache_data
+        def find_duplicates(df):
+            duplicate_rows = df.duplicated()
+            num_duplicates = duplicate_rows.sum()
+            return num_duplicates, duplicate_rows
+
+        @st.cache_data
+        def drop_duplicates(df):
+            return df.drop_duplicates()
+
+        # Assuming st.session_state.df is your large DataFrame
+        num_duplicates, duplicate_rows = find_duplicates(st.session_state.df)
+
         if num_duplicates == 0:
             st.write("There are no duplicated rows in the dataset.")
         else:
             st.write(f"There are {num_duplicates} duplicate rows in the dataset.")
             
             if st.button("Drop Duplicates", key="drop_duplicates_bt"):
-                st.session_state.df.drop_duplicates(inplace=True)
+                st.session_state.df = drop_duplicates(st.session_state.df)
                 st.success("All duplicate rows have been dropped.")
+                # Assuming backup_df() is defined elsewhere
                 backup_df()
     
     with tab4:
@@ -628,12 +638,31 @@ def export():
         with st.container(border = True):
             st.subheader("Local")
 
+            @st.cache_data
+            def process_json_file(file):
+                try:
+                    content = file.getvalue()
+                    settings_json = content.decode("utf-8")
+                    return settings_json
+                except UnicodeDecodeError:
+                    st.error("Invalid file encoding. Please upload a UTF-8 encoded JSON file.")
+                    return None
+
             # File uploader for importing settings
             json_file = st.file_uploader("Choose your local dashboard file", type="json")
+
             if json_file is not None:
                 st.session_state.json_file = json_file
-                settings_json = json_file.getvalue().decode("utf-8")
-                import_settings(settings_json)
+                settings_json = process_json_file(json_file)
+                
+                if settings_json:
+                    try:
+                        import_settings(settings_json)  # Passing the JSON string directly
+                        st.success("Settings imported successfully!")
+                    except json.JSONDecodeError:
+                        st.error("Invalid JSON format. Please upload a valid JSON file.")
+                    except Exception as e:
+                        st.error(f"Error importing settings: {str(e)}")
 
 
             # Ensure the dataframe is not empty
