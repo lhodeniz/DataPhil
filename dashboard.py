@@ -164,16 +164,32 @@ def summary():
         ["Shape", "Data Types", "Numerical Data", "Non-Numerical Data", "Missing Values", "Duplicated Rows"])
 
     with tab1:
-        st.markdown(f"Rows: {st.session_state.df.shape[0]:,}  \nColumns: {st.session_state.df.shape[1]:,}")
+
+        @st.cache_data
+        def get_dataframe_info(df):
+            return df.shape[0], df.shape[1]
+
+        rows, cols = get_dataframe_info(st.session_state.df)
+        st.markdown(f"Rows: {rows:,}  \nColumns: {cols:,}")
+                        
 
     with tab2:
         #
-        df_dtypes = st.session_state.df.dtypes.reset_index()
-        df_dtypes.columns = ['Column', 'Type']
+        @st.cache_data
+        def get_dataframe_dtypes(df):
+            df_dtypes = df.dtypes.reset_index()
+            df_dtypes.columns = ['Column', 'Type']
+            return df_dtypes
 
-        # Group by 'Type' and create separate dataframes
-        grouped = df_dtypes.groupby('Type')
+        @st.cache_data
+        def group_dtypes(df_dtypes):
+            return df_dtypes.groupby('Type')
 
+        # Get and cache the dataframe dtypes
+        df_dtypes = get_dataframe_dtypes(st.session_state.df)
+
+        # Group by 'Type' and cache the result
+        grouped = group_dtypes(df_dtypes)
 
         # Display each group separately
         col1, col2, col3, col4, col5, col6 = st.columns(6)
@@ -182,37 +198,62 @@ def summary():
         # Display each group separately
         for i, (dtype, group) in enumerate(grouped):
             with columns[i % 6]:
-                #
                 st.markdown(f"<h5><span>type:</span> <span style='color: lightgreen;'>{dtype}</span></h5>", unsafe_allow_html=True)
                 column_names = group['Column'].tolist()
-                for j, column in enumerate(column_names, 1):
-                    st.write(f"{j}. {column}")
+                st.write("\n".join(f"{j}. {column}" for j, column in enumerate(column_names, 1)))
                 st.write("")
 
 
 
 
-
-
-
     with tab3:
-        st.write(st.session_state.df.describe())
+
+        @st.cache_data
+        def get_df_description(df):
+            return df.describe()
+
+        st.write(get_df_description(st.session_state.df))
 
     with tab4:
         # Check if there are columns of type 'object'
-        if st.session_state.df.select_dtypes(include='object').shape[1] > 0:
-            st.write(st.session_state.df.describe(include='object'))
+        @st.cache_data
+        def get_object_columns(df):
+            return df.select_dtypes(include='object').columns.tolist()
+
+        @st.cache_data
+        def describe_object_columns(df):
+            object_columns = get_object_columns(df)
+            if object_columns:
+                return df[object_columns].describe()
+            return None
+
+        object_columns = get_object_columns(st.session_state.df)
+
+        if object_columns:
+            description = describe_object_columns(st.session_state.df)
+            st.write(description)
         else:
             st.write("No non-numerical data columns to describe.")
 
     with tab5:
-        df_nulls = st.session_state.df.isnull().sum().reset_index()
-        df_nulls.columns = ['Column', 'Number of Null Values']
-        df_nulls.index = df_nulls.index + 1
+
+        @st.cache_data
+        def get_null_counts(df):
+            df_nulls = df.isnull().sum().reset_index()
+            df_nulls.columns = ['Column', 'Number of Null Values']
+            df_nulls.index = df_nulls.index + 1
+            return df_nulls
+
+        df_nulls = get_null_counts(st.session_state.df)
         st.write(df_nulls)
 
     with tab6:
-        df_duplicated = st.session_state.df.duplicated().sum()
+        #
+        @st.cache_data
+        def count_duplicates(df):
+            return df.duplicated().sum()
+
+        df_duplicated = count_duplicates(st.session_state.df)
         st.write(f"There are {df_duplicated} duplicated rows.")
 
 def fix():
