@@ -311,18 +311,45 @@ def fix():
 
 
     with tab2:
+        #
+
+        @st.cache_data
+        def get_columns_with_missing(df):
+            return df.columns[df.isnull().any()].tolist()
+
+        @st.cache_data
+        def apply_missing_value_action(df, column, action, constant_value=None):
+            df = df.copy()
+            if action == "Drop rows":
+                df = df.dropna(subset=[column])
+            elif action == "Drop column":
+                df = df.drop(columns=[column])
+            elif action == "Fill with mean":
+                if pd.api.types.is_numeric_dtype(df[column]):
+                    df[column].fillna(df[column].mean(), inplace=True)
+                else:
+                    raise ValueError(f"Cannot calculate mean for non-numeric column {column}.")
+            elif action == "Fill with median":
+                if pd.api.types.is_numeric_dtype(df[column]):
+                    df[column].fillna(df[column].median(), inplace=True)
+                else:
+                    raise ValueError(f"Cannot calculate median for non-numeric column {column}.")
+            elif action == "Fill with mode":
+                mode_value = df[column].mode().iloc[0]
+                df[column].fillna(mode_value, inplace=True)
+            elif action == "Fill with constant":
+                df[column].fillna(constant_value, inplace=True)
+            return df
 
         st.markdown('<style>div.stSelectbox > div {width: 30%;}</style>', unsafe_allow_html=True)
-        
-        # Get columns with missing values
-        columns_with_missing = st.session_state.df.columns[st.session_state.df.isnull().any()].tolist()
-        
+
+        columns_with_missing = get_columns_with_missing(st.session_state.df)
+
         if not columns_with_missing:
             st.write("No columns with missing values found.")
         else:
             st.write("Select columns and choose how to handle missing values:")
             
-            changes_made = False  # Flag to track if any changes were made
             actions = {}  # Dictionary to store actions for each column
             
             for column in columns_with_missing:
@@ -335,7 +362,6 @@ def fix():
                 )
                 
                 if action != "Select an action":
-                    changes_made = True
                     actions[column] = action
                 
                 if action == "Fill with constant":
@@ -343,45 +369,21 @@ def fix():
                     if constant_value:
                         actions[column] = (action, constant_value)
             
-            # Only show the "Apply Changes" button if changes were made
-            if changes_made:
+            if actions:
                 if st.button("Apply Changes", key="apply_changes_missing_bt"):
-                    
-                    for column, action in actions.items():
-                        if action == "Drop rows":
-                            st.session_state.df = st.session_state.df.dropna(subset=[column])
-                            st.success(f"Rows with missing values in {column} have been dropped.")
+                    try:
+                        for column, action in actions.items():
+                            constant_value = None
+                            if isinstance(action, tuple):
+                                action, constant_value = action
+                            st.session_state.df = apply_missing_value_action(st.session_state.df, column, action, constant_value)
+                            st.success(f"Action '{action}' applied to column '{column}'.")
                         
-                        elif action == "Drop column":
-                            st.session_state.df = st.session_state.df.drop(columns=[column])
-                            st.success(f"Column {column} has been dropped.")
-                        
-                        elif action == "Fill with mean":
-                            if pd.api.types.is_numeric_dtype(st.session_state.df[column]):
-                                st.session_state.df[column].fillna(st.session_state.df[column].mean(), inplace=True)
-                                st.success(f"Missing values in {column} have been filled with mean.")
-                            else:
-                                st.error(f"Cannot calculate mean for non-numeric column {column}.")
-                        
-                        elif action == "Fill with median":
-                            if pd.api.types.is_numeric_dtype(st.session_state.df[column]):
-                                st.session_state.df[column].fillna(st.session_state.df[column].median(), inplace=True)
-                                st.success(f"Missing values in {column} have been filled with median.")
-                            else:
-                                st.error(f"Cannot calculate median for non-numeric column {column}.")
-                        
-                        elif action == "Fill with mode":
-                            mode_value = st.session_state.df[column].mode().iloc[0]
-                            st.session_state.df[column].fillna(mode_value, inplace=True)
-                            st.success(f"Missing values in {column} have been filled with mode.")
-                        
-                        elif isinstance(action, tuple) and action[0] == "Fill with constant":
-                            st.session_state.df[column].fillna(action[1], inplace=True)
-                            st.success(f"Missing values in {column} have been filled with '{action[1]}'.")
-                    
-                    st.write("Dataset Updated!")
-                    st.dataframe(st.session_state.df.head())
-                    backup_df()
+                        st.write("Dataset Updated!")
+                        st.dataframe(st.session_state.df.head())
+                        backup_df()
+                    except Exception as e:
+                        st.error(f"Error applying changes: {str(e)}")
 
 
     with tab3:
