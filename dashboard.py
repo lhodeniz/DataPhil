@@ -1508,8 +1508,8 @@ def dashboard_tab():
 
     with st.container(border = True):
         # Let the user define the dashboard layout
-        rows = st.number_input("Number of rows", min_value=1, value=2, key = "dash_row")
-        cols = st.number_input("Number of columns", min_value=1, value=2, key= "dash_col")
+        rows = st.number_input("Number of rows", min_value=1, max_value = 10, value=2, key = "dash_row")
+        cols = st.number_input("Number of columns", min_value=1, max_value = 10, value=2, key= "dash_col")
 
     # Create a list of cell positions
     cell_positions = [f"{i+1}-{j+1}" for i in range(rows) for j in range(cols)]

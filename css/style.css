@@ -23,10 +23,12 @@
 
 .st-key-chart_title div[data-testid="stTextInputRootElement"]{
 	width: 30%;
+
 }
 
 .st-key-select_cell div[data-baseweb="select"]{
 	width: 10%;
+
 }
 
 
