@@ -658,7 +658,7 @@ def export():
                 if settings_json:
                     try:
                         import_settings(settings_json)  # Passing the JSON string directly
-                        st.success("Settings imported successfully!")
+                        
                     except json.JSONDecodeError:
                         st.error("Invalid JSON format. Please upload a valid JSON file.")
                     except Exception as e:
