@@ -1,0 +1,32 @@
+
+/* TUI */
+
+.st-key-tui_title div[data-testid="stTextInputRootElement"]{
+
+    width: 30%;
+
+}
+
+
+.st-key-dash_row div[data-testid="stNumberInputContainer"]{
+	width: 10%;
+}
+
+
+.st-key-dash_col div[data-testid="stNumberInputContainer"]{
+	width: 10%;
+}
+
+.st-key-tui_chart_type div[data-baseweb="select"]{
+	width: 20%;
+}
+
+.st-key-chart_title div[data-testid="stTextInputRootElement"]{
+	width: 30%;
+}
+
+.st-key-select_cell div[data-baseweb="select"]{
+	width: 10%;
+}
+
+

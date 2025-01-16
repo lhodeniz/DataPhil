@@ -107,6 +107,8 @@ if 'chart_code' not in st.session_state:
 if 'column_widths' not in st.session_state:
     column_widths = []
 
+with open("css/style.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 def add_or_update_function():
     func_name = st.session_state.function_name
@@ -1501,12 +1503,13 @@ def dashboard_tab():
     # Check for saved results
     st.session_state.tb = st.session_state.get('tb', {})
     tb = pd.DataFrame(st.session_state.tb.items(), columns=['Key', 'Value'])
+
     st.session_state.custom_title = st.text_input("Enter dashboard title:", "Dashboard", key = "tui_title")
 
     with st.container(border = True):
         # Let the user define the dashboard layout
-        rows = st.number_input("Number of rows", min_value=1, value=2)
-        cols = st.number_input("Number of columns", min_value=1, value=2)
+        rows = st.number_input("Number of rows", min_value=1, value=2, key = "dash_row")
+        cols = st.number_input("Number of columns", min_value=1, value=2, key= "dash_col")
 
     # Create a list of cell positions
     cell_positions = [f"{i+1}-{j+1}" for i in range(rows) for j in range(cols)]
@@ -1585,7 +1588,7 @@ def dashboard_tab():
 
 
         # Let the user select the chart type
-        selected_chart = st.selectbox("Select a chart type", chart_list)
+        selected_chart = st.selectbox("Select a chart type", chart_list, key = "tui_chart_type")
 
         col1, col2, col3 = st.columns([3,1,3], gap="small")
         with col1:
@@ -2322,10 +2325,10 @@ def dashboard_tab():
 
 
     # Ask for chart title and axis labels
-    chart_title = st.text_input("Chart title")
+    chart_title = st.text_input("Chart title", key = "chart_title")
 
     # Let the user select the cell position
-    selected_cell = st.selectbox("Select cell position", st.session_state.layout["cells"])
+    selected_cell = st.selectbox("Select cell position", st.session_state.layout["cells"], key="select_cell")
 
     # Create the chart when the user clicks a button
     if st.button("Create Chart"):
