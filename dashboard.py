@@ -288,13 +288,12 @@ def fix():
             except Exception as e:
                 return df, str(e)
 
-        st.markdown('<style>div.stSelectbox > div {width: 30%;}</style>', unsafe_allow_html=True)
 
         column_names = get_column_names(st.session_state.df)
-        column_to_convert = st.selectbox("Select a column to convert", column_names)
+        column_to_convert = st.selectbox("Select a column to convert", column_names, key = "convert_column")
 
         data_types = ["string", "datetime", "integer", "float"]
-        new_type = st.selectbox("Select the new data type", data_types)
+        new_type = st.selectbox("Select the new data type", data_types, key = "convert_type")
 
         date_format = None
         if new_type == "datetime":
@@ -343,7 +342,7 @@ def fix():
                 df[column].fillna(constant_value, inplace=True)
             return df
 
-        st.markdown('<style>div.stSelectbox > div {width: 30%;}</style>', unsafe_allow_html=True)
+        st.markdown('<style>div.stSelectbox > div {width: 20%;}</style>', unsafe_allow_html=True)
 
         columns_with_missing = get_columns_with_missing(st.session_state.df)
 
@@ -416,9 +415,6 @@ def fix():
     
     with tab4:
 
-        st.markdown('<style>div.stTextInput > div {width: 30%;}</style>', unsafe_allow_html=True)
-
-
         # Initialize session state variables
         if 'search_results' not in st.session_state:
             st.session_state.search_results = []
@@ -426,7 +422,7 @@ def fix():
             st.session_state.current_index = 0
 
         # Column selection
-        search_column = st.selectbox("Select column to search", st.session_state.df.columns)
+        search_column = st.selectbox("Select column to search", st.session_state.df.columns, key = "df_search_column")
 
         # Add a checkbox for wildcard search
         use_wildcard = st.checkbox("Use wildcard search")
@@ -447,7 +443,7 @@ def fix():
 
 
         # Search input
-        search_term = st.text_input("Enter search term")
+        search_term = st.text_input("Enter search term", key = "search_df")
 
         # Search button
         if st.button("Search"):
@@ -523,10 +519,9 @@ def new_columns():
 
 
         # Add a new column
-        st.markdown('<style>div.stTextInput > div {width: 50%;}</style>', unsafe_allow_html=True)
 
-        new_col_name = st.text_input("Enter new column name:")
-        new_col_value = st.text_input("Enter value or formula (use `df['column_name']` for existing columns):")
+        new_col_name = st.text_input("Enter new column name:", key = "new_column")
+        new_col_value = st.text_input("Enter value or formula (use `df['column_name']` for existing columns):", key = "column_formula")
         st.write("Add your custom function from the sidebar and use it like this: `df['column_name'].apply(custom_function)`.")
 
         if st.button("Add new column", key="add_new_column_bt"):
@@ -602,16 +597,13 @@ def new_columns():
             st.info("No new columns available for deletion.")
 
     with tab3:
-        st.markdown('<style>div.stSelectbox > div {width: 30%;}</style>', unsafe_allow_html=True)
-        st.markdown('<style>div.stTextInput > div {width: 30%;}</style>', unsafe_allow_html=True)
-
 
         # Rename columns
         # Get list of current column names
         current_columns = st.session_state.df.columns.tolist()
         
         # Select column to rename
-        column_to_rename = st.selectbox("Select column to rename:", current_columns)
+        column_to_rename = st.selectbox("Select column to rename:", current_columns, key = "rename_columns")
         
         # Enter new column name
         new_column_name = st.text_input("Enter new column name:", key="new_column_name")
@@ -1353,7 +1345,7 @@ def report():
         
         # Step 1: Select dataframe
         dataframe_options = ["Original Dataframe"] + list(st.session_state.get('tb', {}).keys())
-        selected_df_name = st.selectbox("Select a dataframe:", dataframe_options)
+        selected_df_name = st.selectbox("Select a dataframe:", dataframe_options, key = "df_filter")
         
         if selected_df_name == "Original Dataframe":
             df = st.session_state.df
@@ -1441,7 +1433,7 @@ def report():
 def aggregate():
         
         # Let user select columns for grouping
-        group_columns = st.multiselect("Select columns to group by:", st.session_state.df.columns)
+        group_columns = st.multiselect("Select columns to group by:", st.session_state.df.columns, key = "aggregate_columns")
 
         # Define available aggregation functions
         agg_functions = ["mean", "sum", "count", "min", "max", "median", "std", "var", "mode", "nunique", "quantile"]
@@ -1455,9 +1447,9 @@ def aggregate():
         # Let user add multiple aggregations
         col1, col2, col3 = st.columns(3)
         with col1:
-            agg_column = st.selectbox("Select column:", st.session_state.df.columns)
+            agg_column = st.selectbox("Select column:", st.session_state.df.columns, key = "agg_column")
         with col2:
-            agg_function = st.selectbox("Select function:", agg_functions)
+            agg_function = st.selectbox("Select function:", agg_functions, key = "agg_function")
         with col3:
             if st.button("Add Aggregation", key="add_aggregation_tables"):
                 st.session_state.agg_list.append((agg_column, agg_function))
@@ -1639,7 +1631,7 @@ def dashboard_tab():
             "Select the type of chart you want to create",
             chart_options,
             index=0 if st.session_state.get("chart_type") is None else chart_options.index(st.session_state["chart_type"]),
-            placeholder="Choose a chart type..."
+            placeholder="Choose a chart type...", key = "gui_chart"
         )
 
         chart_type = st.session_state["chart_type"]

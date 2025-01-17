@@ -1,3 +1,56 @@
+/* Fix Dataset */
+
+/* Convert Data Types */
+
+.st-key-convert_column div[data-baseweb="select"]{
+	width: 20%;
+}
+
+.st-key-convert_type div[data-baseweb="select"]{
+	width: 20%;
+}
+
+/* Edit Dataset */
+
+.st-key-df_search_column div[data-baseweb="select"] {
+	width: 20%;
+}
+
+
+
+.st-key-search_df div[data-testid="stTextInputRootElement"]{
+	width: 20%;
+}
+
+/* New Columns */
+
+/* Add New Columns */
+
+.st-key-new_column div[data-testid="stTextInputRootElement"] {
+	width: 10%;
+
+}
+
+.st-key-column_formula div[data-testid="stTextInputRootElement"]{
+	width: 20%;
+}
+
+/* Rename Columns */
+
+.st-key-rename_columns div[data-baseweb="select"]{
+	width: 20%;
+}
+
+.st-key-new_column_name div[data-testid="stTextInputRootElement"]{
+	width: 20%;
+} 
+
+/* Report */
+/* Filters */
+.st-key-df_filter div[data-baseweb="select"]{
+	width: 20%;
+}
+
 
 /* TUI */
 
@@ -31,4 +84,20 @@
 
 }
 
+/* GUI */
 
+.st-key-aggregate_columns div[data-baseweb="select"]{
+	width: 40%;
+}
+
+.st-key-agg_column div[data-baseweb="select"] {
+	width: 50%;
+}
+
+.st-key-agg_function div[data-baseweb="select"]{
+	width: 50%;
+}
+
+.st-key-gui_chart div[data-baseweb="select"]{
+	width: 20%;
+}
