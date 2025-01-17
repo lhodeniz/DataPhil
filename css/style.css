@@ -91,7 +91,7 @@
 }
 
 .st-key-agg_column div[data-baseweb="select"] {
-	width: 50%;
+	width: 40%;
 }
 
 .st-key-agg_function div[data-baseweb="select"]{
@@ -101,6 +101,7 @@
 .st-key-gui_chart div[data-baseweb="select"]{
 	width: 20%;
 }
+
 
 .st-key-gui_elements div.stSelectbox > div,
 .st-key-gui_elements div.stTextInput > div,

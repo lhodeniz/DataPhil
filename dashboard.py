@@ -1603,22 +1603,23 @@ def dashboard_tab():
 
     with tab2: #GUI
 
+
+        
+        #
+
+        aggregate_choice = st.radio("Do you want to aggregate the dataset?", ("Yes", "No"))
+        if aggregate_choice == "Yes":
+            
+            st.session_state.agg_code = aggregate()
+            st.session_state.agg_event = True
+            df = st.session_state.agg_result
+
+        else:
+            st.session_state.agg_event = False
+            st.write("No aggregation performed.")
+
+
         with st.container(key = "gui_elements"):
-            #
-
-            aggregate_choice = st.radio("Do you want to aggregate the dataset?", ("Yes", "No"))
-            if aggregate_choice == "Yes":
-                
-                st.session_state.agg_code = aggregate()
-                st.session_state.agg_event = True
-                df = st.session_state.agg_result
-
-            else:
-                st.session_state.agg_event = False
-                st.write("No aggregation performed.")
-
-
-
 
             # Chart Type Selection
             chart_options = [
