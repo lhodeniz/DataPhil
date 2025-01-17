@@ -1095,29 +1095,25 @@ def new_columns():
         backup_df()
 
     with tab2:
+        #
+        st.markdown('<style>div.stMultiSelect > div {width: 30%;}</style>', unsafe_allow_html=True)
 
-     st.markdown('<style>div.stMultiSelect > div {width: 30%;}</style>', unsafe_allow_html=True)
+        # Allow selection of all columns, not just new ones
+        columns_to_delete = st.multiselect("Select columns to delete:", st.session_state.df.columns, key="delete_columns")
 
-
+        if st.button("Delete", key="delete_columns_bt"):
+            if columns_to_delete:
+                st.session_state.df.drop(columns=columns_to_delete, inplace=True)
+                st.success(f"Deleted columns: {', '.join(columns_to_delete)}")
+                st.write(st.session_state.df.head())
+                # Reset the multiselect after deletion
+                st.session_state.columns_to_delete = []
+                backup_df()  # Assuming this function exists to backup the dataframe
+            else:
+                st.warning("No columns selected for deletion.")
 
      
-     new_columns = [col for col in st.session_state.df.columns if col not in st.session_state.original_columns]
-     if new_columns:
-            
-            columns_to_delete = st.multiselect("Select columns to delete:", new_columns, key="delete_columns")
-            
-            if st.button("Delete", key="delete_new_columns_bt"):
-                if columns_to_delete:
-                    st.session_state.df.drop(columns=columns_to_delete, inplace=True)
-                    st.success(f"Deleted columns: {', '.join(columns_to_delete)}")
-                    st.write(st.session_state.df.head())
-                    # Reset the multiselect after deletion
-                    st.session_state.columns_to_delete = []
-                    backup_df()
-                else:
-                    st.warning("No columns selected for deletion.")
-     else:
-            st.info("No new columns available for deletion.")
+
 
     with tab3:
 
