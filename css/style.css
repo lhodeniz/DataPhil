@@ -101,3 +101,11 @@
 .st-key-gui_chart div[data-baseweb="select"]{
 	width: 20%;
 }
+
+.st-key-gui_elements div.stSelectbox > div,
+.st-key-gui_elements div.stTextInput > div,
+.st-key-gui_elements div.stNumberInput > div,
+.st-key-gui_elements div[data-baseweb="select"],
+.st-key-gui_elements div[data-baseweb="slider"] {
+    width: 20%;
+}

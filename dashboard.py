@@ -1602,379 +1602,355 @@ def dashboard_tab():
 
 
     with tab2: #GUI
-        
 
-        aggregate_choice = st.radio("Do you want to aggregate the dataset?", ("Yes", "No"))
-        if aggregate_choice == "Yes":
-            
-            st.session_state.agg_code = aggregate()
-            st.session_state.agg_event = True
-            df = st.session_state.agg_result
+        with st.container(key = "gui_elements"):
+            #
 
-        else:
-            st.session_state.agg_event = False
-            st.write("No aggregation performed.")
+            aggregate_choice = st.radio("Do you want to aggregate the dataset?", ("Yes", "No"))
+            if aggregate_choice == "Yes":
+                
+                st.session_state.agg_code = aggregate()
+                st.session_state.agg_event = True
+                df = st.session_state.agg_result
 
-
-
-
-        # Chart Type Selection
-        chart_options = [
-                "None", "Area Chart", "Bar Chart", "Line Chart", "Scatter Chart",
-                "Map", "Pie Chart", "Histogram", "Box Plot", "Heatmap",
-                "Violin Chart", "Bubble Chart", "Sunburst Chart", "Treemap",
-                "Streamgraph", "Candlestick Chart", "Radar Chart", "WordCloud",
-                "Timeline Chart", "Density Chart", "Gauge Chart", "KPI Card", "Text","Image","Video"
-            ]
-
-        st.session_state["chart_type"] = st.selectbox(
-            "Select the type of chart you want to create",
-            chart_options,
-            index=0 if st.session_state.get("chart_type") is None else chart_options.index(st.session_state["chart_type"]),
-            placeholder="Choose a chart type...", key = "gui_chart"
-        )
-
-        chart_type = st.session_state["chart_type"]
-
-
-        # Dynamic Chart Creation
-        if chart_type == "Area Chart":
-            
-            x = st.selectbox("X",df.columns)
-            y = st.selectbox("Y", df.columns)
-            color = st.selectbox("Color", [None]+list(df.columns) )
-            x_label = st.text_input("X_label", value="", max_chars=None)
-            y_label = st.text_input("Y_lable", value="", max_chars=None)
-            width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
-            height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
-            use_container_width = st.checkbox("use container width", value=True)
-            # user code
-            if st.session_state.agg_event:
-                data = 'agg_data'
             else:
-                data = 'df'
-
-            st.session_state.chart_code = textwrap.dedent(f'''st.area_chart(
-                data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                x = {repr(x)},
-                y = {repr(y)},
-                color = {repr(color)},
-                x_label = {repr(x_label)},
-                y_label = {repr(y_label)},
-                width = {width},
-                height = {height},
-                use_container_width = {use_container_width}
-             )
-
-            ''')
-
-
-        if chart_type == "Bar Chart":
-
-            x = st.selectbox("X",df.columns)
-            y = st.selectbox("Y", df.columns)
-            color = st.selectbox("Color", [None]+list(df.columns) )
-            x_label = st.text_input("X_label", value="", max_chars=None)
-            y_label = st.text_input("Y_lable", value="", max_chars=None)
-            width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
-            height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
-            use_container_width = st.checkbox("use container width", value=True)
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-
-            st.session_state.chart_code = textwrap.dedent(f'''st.bar_chart(
-                data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                x = {repr(x)},
-                y = {repr(y)},
-                color = {repr(color)},
-                x_label = {repr(x_label)},
-                y_label = {repr(y_label)},
-                width = {width},
-                height = {height},
-                use_container_width = {use_container_width}
-             )''')
-
-            
-
-        if chart_type == "Line Chart":
-            x = st.selectbox("X",df.columns)
-            y = st.selectbox("Y", df.columns)
-            color = st.selectbox("Color", [None]+list(df.columns) )
-            x_label = st.text_input("X_label", value="", max_chars=None)
-            y_label = st.text_input("Y_lable", value="", max_chars=None)
-            width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
-            height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
-            use_container_width = st.checkbox("use container width", value=True)
-            # user code
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-            
-            st.session_state.chart_code = textwrap.dedent(f"""st.line_chart(
-                data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                x={repr(x)},
-                y={repr(y)},
-                color={repr(color)},
-                x_label={repr(x_label)},
-                y_label={repr(y_label)},
-                width={width},
-                height={height},
-                use_container_width={use_container_width}
-            )""")
-
-
-        if chart_type == "Scatter Chart":
-            x = st.selectbox("X",df.columns)
-            y = st.selectbox("Y", df.columns)
-            color = st.selectbox("Color", [None]+list(df.columns) )
-            x_label = st.text_input("X_label", value="", max_chars=None)
-            y_label = st.text_input("Y_lable", value="", max_chars=None)
-            width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
-            height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
-            use_container_width = st.checkbox("use container width", value=True)
-            # user code
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-
-
-            st.session_state.chart_code = textwrap.dedent(f'''st.scatter_chart(
-                data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                x = {repr(x)},
-                y = {repr(y)},
-                color = {repr(color)},
-                x_label = {repr(x_label)},
-                y_label = {repr(y_label)},
-                width = {width},
-                height = {height},
-                use_container_width = {use_container_width}
-             )
-
-            ''')
-        
-
-        if chart_type == "Map":
-            latitude = st.selectbox("Latitude", df.columns)
-            longitude = st.selectbox("Longitude", df.columns)
-            size = st.selectbox("Size",[None]+list(df.columns))
-            color = st.selectbox("Color", [None]+list(df.columns))
-            use_container_width = st.checkbox("use container width", value=True)
-            # user code
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
+                st.session_state.agg_event = False
+                st.write("No aggregation performed.")
 
 
 
-            st.session_state.chart_code = textwrap.dedent(f"""st.map(
-                data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                latitude = {repr(latitude)},
-                longitude = {repr(longitude)},
-                size = {repr(size)},
-                color = {repr(color)},
-                use_container_width = {use_container_width}
 
+            # Chart Type Selection
+            chart_options = [
+                    "None", "Area Chart", "Bar Chart", "Line Chart", "Scatter Chart",
+                    "Map", "Pie Chart", "Histogram", "Box Plot", "Heatmap",
+                    "Violin Chart", "Bubble Chart", "Sunburst Chart", "Treemap",
+                    "Streamgraph", "Candlestick Chart", "Radar Chart", "WordCloud",
+                    "Timeline Chart", "Density Chart", "Gauge Chart", "KPI Card", "Text","Image","Video"
+                ]
+
+            st.session_state["chart_type"] = st.selectbox(
+                "Select the type of chart you want to create",
+                chart_options,
+                index=0 if st.session_state.get("chart_type") is None else chart_options.index(st.session_state["chart_type"]),
+                placeholder="Choose a chart type...", key = "gui_chart"
             )
-                        """)
 
+            chart_type = st.session_state["chart_type"]
 
-        if chart_type == "Pie Chart":
-            names = st.selectbox("Category Column", df.columns)
-            values = st.selectbox("Value Column", df.columns)
-            use_container_width = st.checkbox("use container width", value=True)
-            # user code
+            # Dynamic Chart Creation
+            if chart_type == "Area Chart":
+                
+                x = st.selectbox("X",df.columns)
+                y = st.selectbox("Y", df.columns)
+                color = st.selectbox("Color", [None]+list(df.columns) )
+                x_label = st.text_input("X_label", value="", max_chars=None)
+                y_label = st.text_input("Y_lable", value="", max_chars=None)
+                width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
+                height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
+                use_container_width = st.checkbox("use container width", value=True)
+                # user code
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
 
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-
-
-            st.session_state.chart_code = textwrap.dedent(f"""
-                fig = px.pie(
-                {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                names = {repr(names)},
-                values = {repr(values)},
-                )
-                st.plotly_chart(fig)
-            """)
-
-        
-        if chart_type == "Histogram":
-            x = st.selectbox("X", df.columns)
-            color = st.selectbox("Color", [None]+list(df.columns))
-            use_container_width = st.checkbox("use container width", value=True)
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-
-            st.session_state.chart_code = textwrap.dedent(f"""
-                fig = px.histogram(
-                {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                x = {repr(x)},
-                color = {repr(color)},
-                )
-                st.plotly_chart(fig,use_container_width = {use_container_width} )
-                """
-                )
-
-        if chart_type == "Box Plot":
-            x = st.selectbox("Category Column", df.columns)
-            y = st.selectbox("Value Column", df.columns)
-            color = st.selectbox("Color", [None]+list(df.columns))
-            use_container_width = st.checkbox("use container width", value=True)
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-
-            st.session_state.chart_code = textwrap.dedent(f"""
-                fig = px.box(
-                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                st.session_state.chart_code = textwrap.dedent(f'''st.area_chart(
+                    data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                     x = {repr(x)},
                     y = {repr(y)},
-                    color = {repr(color)}
+                    color = {repr(color)},
+                    x_label = {repr(x_label)},
+                    y_label = {repr(y_label)},
+                    width = {width},
+                    height = {height},
+                    use_container_width = {use_container_width}
+                 )
+
+                ''')
+
+
+            if chart_type == "Bar Chart":
+
+                x = st.selectbox("X",df.columns)
+                y = st.selectbox("Y", df.columns)
+                color = st.selectbox("Color", [None]+list(df.columns) )
+                x_label = st.text_input("X_label", value="", max_chars=None)
+                y_label = st.text_input("Y_lable", value="", max_chars=None)
+                width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
+                height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
+                use_container_width = st.checkbox("use container width", value=True)
+
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+
+                st.session_state.chart_code = textwrap.dedent(f'''st.bar_chart(
+                    data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                    x = {repr(x)},
+                    y = {repr(y)},
+                    color = {repr(color)},
+                    x_label = {repr(x_label)},
+                    y_label = {repr(y_label)},
+                    width = {width},
+                    height = {height},
+                    use_container_width = {use_container_width}
+                 )''')
+
+                
+
+            if chart_type == "Line Chart":
+                x = st.selectbox("X",df.columns)
+                y = st.selectbox("Y", df.columns)
+                color = st.selectbox("Color", [None]+list(df.columns) )
+                x_label = st.text_input("X_label", value="", max_chars=None)
+                y_label = st.text_input("Y_lable", value="", max_chars=None)
+                width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
+                height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
+                use_container_width = st.checkbox("use container width", value=True)
+                # user code
+
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+                
+                st.session_state.chart_code = textwrap.dedent(f"""st.line_chart(
+                    data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                    x={repr(x)},
+                    y={repr(y)},
+                    color={repr(color)},
+                    x_label={repr(x_label)},
+                    y_label={repr(y_label)},
+                    width={width},
+                    height={height},
+                    use_container_width={use_container_width}
+                )""")
+
+
+            if chart_type == "Scatter Chart":
+                x = st.selectbox("X",df.columns)
+                y = st.selectbox("Y", df.columns)
+                color = st.selectbox("Color", [None]+list(df.columns) )
+                x_label = st.text_input("X_label", value="", max_chars=None)
+                y_label = st.text_input("Y_lable", value="", max_chars=None)
+                width = st.number_input("Width", min_value=None, max_value=None, value=0, step=1)
+                height = st.number_input("Height", min_value=None, max_value=None, value=0, step=1)
+                use_container_width = st.checkbox("use container width", value=True)
+                # user code
+
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+
+
+                st.session_state.chart_code = textwrap.dedent(f'''st.scatter_chart(
+                    data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                    x = {repr(x)},
+                    y = {repr(y)},
+                    color = {repr(color)},
+                    x_label = {repr(x_label)},
+                    y_label = {repr(y_label)},
+                    width = {width},
+                    height = {height},
+                    use_container_width = {use_container_width}
+                 )
+
+                ''')
+            
+
+            if chart_type == "Map":
+                latitude = st.selectbox("Latitude", df.columns)
+                longitude = st.selectbox("Longitude", df.columns)
+                size = st.selectbox("Size",[None]+list(df.columns))
+                color = st.selectbox("Color", [None]+list(df.columns))
+                use_container_width = st.checkbox("use container width", value=True)
+                # user code
+
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+
+
+
+                st.session_state.chart_code = textwrap.dedent(f"""st.map(
+                    data = {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                    latitude = {repr(latitude)},
+                    longitude = {repr(longitude)},
+                    size = {repr(size)},
+                    color = {repr(color)},
+                    use_container_width = {use_container_width}
+
+                )
+                            """)
+
+
+            if chart_type == "Pie Chart":
+                names = st.selectbox("Category Column", df.columns)
+                values = st.selectbox("Value Column", df.columns)
+                use_container_width = st.checkbox("use container width", value=True)
+                # user code
+
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+
+
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    fig = px.pie(
+                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                    names = {repr(names)},
+                    values = {repr(values)},
                     )
-                st.plotly_chart(fig, {use_container_width})
-                """
-                )
-
-        if chart_type == "Heatmap":
-
-            selected_columns = st.multiselect("Columns", df.columns.tolist(), default=df.columns.tolist())
-            corr_method = st.selectbox("Correlation Method", ["pearson", "spearman", "kendall"])
-            color_palette = st.selectbox("Color Palette", ["coolwarm", "viridis", "YlGnBu", "RdYlBu"])
-            show_annotations = st.checkbox("Show correlation values", value=True)
-            font_size = st.slider("Annotation font size", 6, 20, 10)
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-
-            st.session_state.chart_code = textwrap.dedent(f"""
-                fig, ax = plt.subplots(figsize=(10, 8))
-                correlation_matrix = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(selected_columns)}].corr(method={repr(corr_method)})
-                sns.heatmap(
-                    correlation_matrix, 
-                    annot={repr(show_annotations)}, 
-                    fmt=".2f", 
-                    cmap={repr(color_palette)}, 
-                    ax=ax, 
-                    annot_kws={{"size": {font_size}}}
-                )
-                st.pyplot(fig)
+                    st.plotly_chart(fig)
                 """)
 
-        if chart_type == "Violin Chart":
+            
+            if chart_type == "Histogram":
+                x = st.selectbox("X", df.columns)
+                color = st.selectbox("Color", [None]+list(df.columns))
+                use_container_width = st.checkbox("use container width", value=True)
 
-            # Column selection
-            value_column = st.selectbox("Value Column (y-axis)", df.columns.tolist())
-            category_column = st.selectbox("Category Column (x-axis and color)", df.columns.tolist())
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
 
-            # Plot customization
-            show_box = st.checkbox("Show box plot inside violin", value=True)
-            show_points = st.checkbox("Show all data points", value=True)
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-
-            st.session_state.chart_code = textwrap.dedent(f"""
-                fig = px.violin(
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    fig = px.histogram(
                     {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                    y={repr(value_column)},
-                    x={repr(category_column)},
-                    color={repr(category_column)},
-                    box={repr(show_box)},
-                    points={'"all"' if show_points else False},
-                    
-                )
-                st.plotly_chart(fig, use_container_width=True)
-                """)
+                    x = {repr(x)},
+                    color = {repr(color)},
+                    )
+                    st.plotly_chart(fig,use_container_width = {use_container_width} )
+                    """
+                    )
 
-        if chart_type == "Bubble Chart":
+            if chart_type == "Box Plot":
+                x = st.selectbox("Category Column", df.columns)
+                y = st.selectbox("Value Column", df.columns)
+                color = st.selectbox("Color", [None]+list(df.columns))
+                use_container_width = st.checkbox("use container width", value=True)
 
-            # Column selection
-            x_column = st.selectbox("x-axis column", df.columns.tolist())
-            y_column = st.selectbox("y-axis column", df.columns.tolist())
-            size_column = st.selectbox("bubble size column", df.columns.tolist())
-            color_column = st.selectbox("color column", df.columns.tolist())
-            hover_column = st.selectbox("hover data column", df.columns.tolist())
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
 
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    fig = px.box(
+                        {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                        x = {repr(x)},
+                        y = {repr(y)},
+                        color = {repr(color)}
+                        )
+                    st.plotly_chart(fig, {use_container_width})
+                    """
+                    )
 
-            st.session_state.chart_code = textwrap.dedent(f"""
-                fig = px.scatter(
-                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                    x={repr(x_column)},
-                    y={repr(y_column)},
-                    size={repr(size_column)},
-                    color={repr(color_column)},
-                    hover_name={repr(hover_column)}
-                )
-                st.plotly_chart(fig, use_container_width=True)
-                """)
+            if chart_type == "Heatmap":
 
-        if chart_type == "Sunburst Chart":
-            # Column selection
-            all_columns = df.columns.tolist()
-            path_columns = st.multiselect("Select hierarchical category columns (in order)", all_columns, max_selections=3)
-            value_column = st.selectbox("Select the value column", all_columns)
+                selected_columns = st.multiselect("Columns", df.columns.tolist(), default=df.columns.tolist())
+                corr_method = st.selectbox("Correlation Method", ["pearson", "spearman", "kendall"])
+                color_palette = st.selectbox("Color Palette", ["coolwarm", "viridis", "YlGnBu", "RdYlBu"])
+                show_annotations = st.checkbox("Show correlation values", value=True)
+                font_size = st.slider("Annotation font size", 6, 20, 10)
 
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
 
-            st.session_state.chart_code = textwrap.dedent(f"""
-            if {repr(path_columns)} and {repr(value_column)}:
-                fig = px.sunburst(
-                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                    path={repr(path_columns)},
-                    values={repr(value_column)},
-                    
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.error("Please select at least one path column and a value column.")
-            """)
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    fig, ax = plt.subplots(figsize=(10, 8))
+                    correlation_matrix = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(selected_columns)}].corr(method={repr(corr_method)})
+                    sns.heatmap(
+                        correlation_matrix, 
+                        annot={repr(show_annotations)}, 
+                        fmt=".2f", 
+                        cmap={repr(color_palette)}, 
+                        ax=ax, 
+                        annot_kws={{"size": {font_size}}}
+                    )
+                    st.pyplot(fig)
+                    """)
 
+            if chart_type == "Violin Chart":
 
-        if chart_type == "Treemap":
-            # Column selection
-            all_columns = df.columns.tolist()
-            path_columns = st.multiselect("Select hierarchical category columns (in order)", all_columns, max_selections=3)
-            value_column = st.selectbox("Select the value column", all_columns)
+                # Column selection
+                value_column = st.selectbox("Value Column (y-axis)", df.columns.tolist())
+                category_column = st.selectbox("Category Column (x-axis and color)", df.columns.tolist())
 
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
+                # Plot customization
+                show_box = st.checkbox("Show box plot inside violin", value=True)
+                show_points = st.checkbox("Show all data points", value=True)
 
-            st.session_state.chart_code = textwrap.dedent(f"""
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    fig = px.violin(
+                        {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                        y={repr(value_column)},
+                        x={repr(category_column)},
+                        color={repr(category_column)},
+                        box={repr(show_box)},
+                        points={'"all"' if show_points else False},
+                        
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    """)
+
+            if chart_type == "Bubble Chart":
+
+                # Column selection
+                x_column = st.selectbox("x-axis column", df.columns.tolist())
+                y_column = st.selectbox("y-axis column", df.columns.tolist())
+                size_column = st.selectbox("bubble size column", df.columns.tolist())
+                color_column = st.selectbox("color column", df.columns.tolist())
+                hover_column = st.selectbox("hover data column", df.columns.tolist())
+
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    fig = px.scatter(
+                        {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                        x={repr(x_column)},
+                        y={repr(y_column)},
+                        size={repr(size_column)},
+                        color={repr(color_column)},
+                        hover_name={repr(hover_column)}
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    """)
+
+            if chart_type == "Sunburst Chart":
+                # Column selection
+                all_columns = df.columns.tolist()
+                path_columns = st.multiselect("Select hierarchical category columns (in order)", all_columns, max_selections=3)
+                value_column = st.selectbox("Select the value column", all_columns)
+
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+
+                st.session_state.chart_code = textwrap.dedent(f"""
                 if {repr(path_columns)} and {repr(value_column)}:
-                    fig = px.treemap(
+                    fig = px.sunburst(
                         {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
                         path={repr(path_columns)},
                         values={repr(value_column)},
-
+                        
                     )
                     st.plotly_chart(fig, use_container_width=True)
                 else:
@@ -1982,62 +1958,11 @@ def dashboard_tab():
                 """)
 
 
-        if chart_type == "Streamgraph":
-            # Column selection
-            x_column = st.selectbox("Select the x-axis column (e.g., time)", df.columns.tolist())
-            y_column = st.selectbox("Select the y-axis column (numerical data)", df.columns.tolist())
-            category_column = st.selectbox("Select the category column", df.columns.tolist())
-
-            # Plot customization
-            color_scheme = st.selectbox("Select color scheme", ["category10", "category20", "tableau10", "tableau20"])
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-
-            st.session_state.chart_code = textwrap.dedent(f"""
-                streamgraph = alt.Chart({data[1:-1] if data.startswith("'") and data.endswith("'") else data}).mark_area().encode(
-                    x={repr(x_column)},
-                    y=alt.Y({repr(y_column)}, stack='center'),
-                    color=alt.Color({repr(category_column)}, scale=alt.Scale(scheme={repr(color_scheme)}))
-                ).properties(
-
-                )
-                st.altair_chart(streamgraph, use_container_width=True)
-                """)
-
-
-        if chart_type == "Candlestick Chart":
-            # Column selection
-            date_column = st.selectbox("Select the date column", [""] + df.columns.tolist())
-            open_column = st.selectbox("Select the open price column", [""] + df.columns.tolist())
-            high_column = st.selectbox("Select the high price column", [""] + df.columns.tolist())
-            low_column = st.selectbox("Select the low price column", [""] + df.columns.tolist())
-            close_column = st.selectbox("Select the close price column", [""] + df.columns.tolist())
-
-            # Initialize date_range with a default value
-            date_range = None
-
-            # Optional date range selection
-            if date_column:
-                try:
-                    min_date = df[date_column].min()
-                    max_date = df[date_column].max()
-                    date_range = st.date_input("Select date range", [min_date, max_date])
-                except KeyError:
-                    st.error(f"The selected date column '{date_column}' is not valid. Please choose a valid date column.")
-            else:
-                st.warning("Please select a date column before setting the date range.")
-
-            # Use date_range only if it's defined and date_column is selected
-            if date_range and date_column:
-                df_filtered = df[(df[date_column] >= str(date_range[0])) & (df[date_column] <= str(date_range[1]))]
-            else:
-                df_filtered = df  # Use the original dataframe if date_range is not set
-
-
-            if date_range and date_column and all([open_column, high_column, low_column, close_column]):
+            if chart_type == "Treemap":
+                # Column selection
+                all_columns = df.columns.tolist()
+                path_columns = st.multiselect("Select hierarchical category columns (in order)", all_columns, max_selections=3)
+                value_column = st.selectbox("Select the value column", all_columns)
 
                 if st.session_state.agg_event:
                     data = 'agg_data'
@@ -2045,146 +1970,27 @@ def dashboard_tab():
                     data = 'df'
 
                 st.session_state.chart_code = textwrap.dedent(f"""
-                    df_filtered = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[({data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(date_column)}] >= str({repr(date_range[0])})) & ({data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(date_column)}] <= str({repr(date_range[1])}))]
+                    if {repr(path_columns)} and {repr(value_column)}:
+                        fig = px.treemap(
+                            {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                            path={repr(path_columns)},
+                            values={repr(value_column)},
 
-                    fig = go.Figure(data=[go.Candlestick(
-                        x=df_filtered[{repr(date_column)}],
-                        open=df_filtered[{repr(open_column)}],
-                        high=df_filtered[{repr(high_column)}],
-                        low=df_filtered[{repr(low_column)}],
-                        close=df_filtered[{repr(close_column)}]
-                    )])
-
-                    st.plotly_chart(fig, use_container_width=True)
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.error("Please select at least one path column and a value column.")
                     """)
 
 
-        if chart_type == "Radar Chart":
-            # Column selection
-            value_column = st.selectbox("Select the value column (radial axis)", df.columns.tolist())
-            category_column = st.selectbox("Select the category column (angular axis)", df.columns.tolist())
-            group_column = st.selectbox("Select the group column (for multiple traces)", df.columns.tolist())
+            if chart_type == "Streamgraph":
+                # Column selection
+                x_column = st.selectbox("Select the x-axis column (e.g., time)", df.columns.tolist())
+                y_column = st.selectbox("Select the y-axis column (numerical data)", df.columns.tolist())
+                category_column = st.selectbox("Select the category column", df.columns.tolist())
 
-            # Plot customization
-            color_scheme = st.selectbox("Select color scheme", ["Viridis", "Plasma", "Inferno", "Magma", "Cividis"])
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-
-            st.session_state.chart_code = textwrap.dedent(f"""
-                fig = px.line_polar(
-                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                    r={repr(value_column)},
-                    theta={repr(category_column)},
-                    color={repr(group_column)},
-                    line_close=True,
-                    title="Polar Line Chart Example",
-                    color_discrete_sequence=getattr(px.colors.sequential, {repr(color_scheme)})
-                )
-                st.plotly_chart(fig, use_container_width=True)
-                """)
-
-
-        if chart_type == "WordCloud":
-            # Column selection
-            text_column = st.selectbox("Select the text column for word cloud", df.columns.tolist())
-
-            # WordCloud customization
-            width = st.slider("Word cloud width", 400, 1200, 800)
-            height = st.slider("Word cloud height", 200, 800, 400)
-            bg_color = st.color_picker("Background color", "#FFFFFF")
-            max_words = st.slider("Maximum words", 50, 500, 200)
-            colormap = st.selectbox("Color scheme", ["viridis", "plasma", "inferno", "magma"])
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-
-            st.session_state.chart_code = textwrap.dedent(f"""
-            text = ' '.join({data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(text_column)}].dropna().astype(str))
-            wordcloud = WordCloud(
-                width={repr(width)},
-                height={repr(height)},
-                background_color={repr(bg_color)},
-                max_words={repr(max_words)},
-                colormap={repr(colormap)}
-            ).generate(text)
-
-            fig, ax = plt.subplots()
-            ax.imshow(wordcloud, interpolation='bilinear')
-            ax.axis('off')
-            st.pyplot(fig)
-            """)
-
-
-        if chart_type == "Timeline Chart":
-            # Column selection
-            start_column = st.selectbox("Select the start date/time column", df.columns.tolist())
-            end_column = st.selectbox("Select the end date/time column", df.columns.tolist())
-            category_column = st.selectbox("Select the category column (y-axis)", df.columns.tolist())
-            group_column = st.selectbox("Select the group column (for color-coding)", df.columns.tolist())
-
-            # Plot customization
-            color_scheme = st.selectbox("Select color scheme", ["Plotly", "D3", "G10", "T10", "Alphabet"])
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-
-            st.session_state.chart_code = textwrap.dedent(f"""
-                fig = px.timeline(
-                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                    x_start={repr(start_column)},
-                    x_end={repr(end_column)},
-                    y={repr(category_column)},
-                    color={repr(group_column)},
-                    color_discrete_sequence=getattr(px.colors.qualitative, {repr(color_scheme)})
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            """)
-
-
-        if chart_type == "Density Chart":
-            # Column selection
-            x_column = st.selectbox("Select the x-axis column", df.columns.tolist())
-            y_column = st.selectbox("Select the y-axis column", df.columns.tolist())
-            category_column = st.selectbox("Select the category column (for color-coding)", df.columns.tolist())
-
-            # Plot customization
-            color_scheme = st.selectbox("Select color scheme", ["Plotly", "D3", "G10", "T10", "Alphabet"])
-
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
-
-            st.session_state.chart_code = textwrap.dedent(f"""
-                fig = px.density_contour(
-                    {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
-                    x={repr(x_column)},
-                    y={repr(y_column)},
-                    color={repr(category_column)},
-                    title="Density Contour Plot Example",
-                    color_discrete_sequence=getattr(px.colors.qualitative, {repr(color_scheme)})
-                )
-                st.plotly_chart(fig, use_container_width=True)
-                """)
-
-
-        if chart_type == "Gauge Chart":
-            # Column selection
-            value_column = st.selectbox("Select the column for gauge value", df.columns.tolist())
-            reference_column = st.selectbox("Select the column for reference value (optional)", ["None"] + df.columns.tolist())
-            
-            # Gauge customization
-              # or let the user input it
-            if value_column:
-
-                max_value = st.number_input("Enter the maximum value for the gauge", value=float(df[value_column].max()))
+                # Plot customization
+                color_scheme = st.selectbox("Select color scheme", ["category10", "category20", "tableau10", "tableau20"])
 
                 if st.session_state.agg_event:
                     data = 'agg_data'
@@ -2192,128 +1998,323 @@ def dashboard_tab():
                     data = 'df'
 
                 st.session_state.chart_code = textwrap.dedent(f"""
-                    gauge_value = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(value_column)}].iloc[-1]
+                    streamgraph = alt.Chart({data[1:-1] if data.startswith("'") and data.endswith("'") else data}).mark_area().encode(
+                        x={repr(x_column)},
+                        y=alt.Y({repr(y_column)}, stack='center'),
+                        color=alt.Color({repr(category_column)}, scale=alt.Scale(scheme={repr(color_scheme)}))
+                    ).properties(
 
-                    reference_value = None
-                    if {repr(reference_column)} != "None":
-                        reference_value = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(reference_column)}].iloc[-1]
+                    )
+                    st.altair_chart(streamgraph, use_container_width=True)
+                    """)
 
-                    fig = go.Figure(go.Indicator(
-                        mode="gauge+number+delta" if reference_value else "gauge+number",
-                        value=gauge_value,
-                        delta={{'reference': reference_value}} if reference_value else None,
-                        gauge={{'axis': {{'range': [None, {max_value}]}}}},
-                        
-                    ))
 
+            if chart_type == "Candlestick Chart":
+                # Column selection
+                date_column = st.selectbox("Select the date column", [""] + df.columns.tolist())
+                open_column = st.selectbox("Select the open price column", [""] + df.columns.tolist())
+                high_column = st.selectbox("Select the high price column", [""] + df.columns.tolist())
+                low_column = st.selectbox("Select the low price column", [""] + df.columns.tolist())
+                close_column = st.selectbox("Select the close price column", [""] + df.columns.tolist())
+
+                # Initialize date_range with a default value
+                date_range = None
+
+                # Optional date range selection
+                if date_column:
+                    try:
+                        min_date = df[date_column].min()
+                        max_date = df[date_column].max()
+                        date_range = st.date_input("Select date range", [min_date, max_date])
+                    except KeyError:
+                        st.error(f"The selected date column '{date_column}' is not valid. Please choose a valid date column.")
+                else:
+                    st.warning("Please select a date column before setting the date range.")
+
+                # Use date_range only if it's defined and date_column is selected
+                if date_range and date_column:
+                    df_filtered = df[(df[date_column] >= str(date_range[0])) & (df[date_column] <= str(date_range[1]))]
+                else:
+                    df_filtered = df  # Use the original dataframe if date_range is not set
+
+
+                if date_range and date_column and all([open_column, high_column, low_column, close_column]):
+
+                    if st.session_state.agg_event:
+                        data = 'agg_data'
+                    else:
+                        data = 'df'
+
+                    st.session_state.chart_code = textwrap.dedent(f"""
+                        df_filtered = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[({data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(date_column)}] >= str({repr(date_range[0])})) & ({data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(date_column)}] <= str({repr(date_range[1])}))]
+
+                        fig = go.Figure(data=[go.Candlestick(
+                            x=df_filtered[{repr(date_column)}],
+                            open=df_filtered[{repr(open_column)}],
+                            high=df_filtered[{repr(high_column)}],
+                            low=df_filtered[{repr(low_column)}],
+                            close=df_filtered[{repr(close_column)}]
+                        )])
+
+                        st.plotly_chart(fig, use_container_width=True)
+                        """)
+
+
+            if chart_type == "Radar Chart":
+                # Column selection
+                value_column = st.selectbox("Select the value column (radial axis)", df.columns.tolist())
+                category_column = st.selectbox("Select the category column (angular axis)", df.columns.tolist())
+                group_column = st.selectbox("Select the group column (for multiple traces)", df.columns.tolist())
+
+                # Plot customization
+                color_scheme = st.selectbox("Select color scheme", ["Viridis", "Plasma", "Inferno", "Magma", "Cividis"])
+
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    fig = px.line_polar(
+                        {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                        r={repr(value_column)},
+                        theta={repr(category_column)},
+                        color={repr(group_column)},
+                        line_close=True,
+                        title="Polar Line Chart Example",
+                        color_discrete_sequence=getattr(px.colors.sequential, {repr(color_scheme)})
+                    )
                     st.plotly_chart(fig, use_container_width=True)
                     """)
 
 
-        if chart_type == "KPI Card":
+            if chart_type == "WordCloud":
+                # Column selection
+                text_column = st.selectbox("Select the text column for word cloud", df.columns.tolist())
 
-            # Get list of numeric columns for value and delta
-            numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
-            
-            # Get list of all columns for label
-            all_columns = df.columns.tolist()
+                # WordCloud customization
+                width = st.slider("Word cloud width", 400, 1200, 800)
+                height = st.slider("Word cloud height", 200, 800, 400)
+                bg_color = st.color_picker("Background color", "#FFFFFF")
+                max_words = st.slider("Maximum words", 50, 500, 200)
+                colormap = st.selectbox("Color scheme", ["viridis", "plasma", "inferno", "magma"])
 
-            # User inputs
-            label_column = st.selectbox("KPI label:", all_columns)
-            value_column = st.selectbox("current KPI value:", numeric_columns)
-            delta_column = st.selectbox("KPI change (delta):", ["None"] + numeric_columns)
-            
-            # Optional configurations
-            delta_color = st.selectbox("delta color:", ["normal", "inverse", "off"])
-            label_visibility = st.selectbox("label visibility?", ["visible", "hidden", "collapsed"])
-            border = st.checkbox("border around the metric?")
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
 
-            if st.session_state.agg_event:
-                data = 'agg_data'
-            else:
-                data = 'df'
+                st.session_state.chart_code = textwrap.dedent(f"""
+                text = ' '.join({data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(text_column)}].dropna().astype(str))
+                wordcloud = WordCloud(
+                    width={repr(width)},
+                    height={repr(height)},
+                    background_color={repr(bg_color)},
+                    max_words={repr(max_words)},
+                    colormap={repr(colormap)}
+                ).generate(text)
 
-            st.session_state.chart_code = textwrap.dedent(f"""
-                # Get the latest values from the selected columns
-                label = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(label_column)}].iloc[-1]
-                value = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(value_column)}].iloc[-1]
-                delta = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(delta_column)}].iloc[-1] if {repr(delta_column)} != "None" else None
-
-                st.metric(
-                    label=label,
-                    value=value,
-                    delta=delta,
-                    delta_color={repr(delta_color)},
-                    label_visibility={repr(label_visibility)},
-                    border={repr(border)}
-                )
+                fig, ax = plt.subplots()
+                ax.imshow(wordcloud, interpolation='bilinear')
+                ax.axis('off')
+                st.pyplot(fig)
                 """)
 
 
+            if chart_type == "Timeline Chart":
+                # Column selection
+                start_column = st.selectbox("Select the start date/time column", df.columns.tolist())
+                end_column = st.selectbox("Select the end date/time column", df.columns.tolist())
+                category_column = st.selectbox("Select the category column (y-axis)", df.columns.tolist())
+                group_column = st.selectbox("Select the group column (for color-coding)", df.columns.tolist())
 
-        if chart_type == "Text":
+                # Plot customization
+                color_scheme = st.selectbox("Select color scheme", ["Plotly", "D3", "G10", "T10", "Alphabet"])
 
-            # Text input
-            user_text = st.text_input("Enter your text:")
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
 
-            # Font size selection
-            font_size = st.slider("Select font size:", 10, 30, 16)
-
-            # Text style selection
-            bold = st.checkbox("Bold")
-            italic = st.checkbox("Italic")
-
-            # Hyperlink option
-            add_link = st.checkbox("Add a hyperlink")
-
-            if add_link:
-                link_text = st.text_input("Enter the text to be linked:")
-                link_url = st.text_input("Enter the URL:")
-                if not link_url.startswith(('http://', 'https://')):
-                    link_url = 'https://' + link_url
-
-            # Display the styled text
-            if user_text:
-                style = f"font-size: {font_size}px;"
-                if bold:
-                    style += " font-weight: bold;"
-                if italic:
-                    style += " font-style: italic;"
-                
-                if add_link and link_text and link_url:
-                    user_text = user_text.replace(link_text, f"<a href='{link_url}'>{link_text}</a>")
-                
                 st.session_state.chart_code = textwrap.dedent(f"""
-                    st.markdown(f"<p style='{style}'>{user_text}</p>", unsafe_allow_html=True)
+                    fig = px.timeline(
+                        {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                        x_start={repr(start_column)},
+                        x_end={repr(end_column)},
+                        y={repr(category_column)},
+                        color={repr(group_column)},
+                        color_discrete_sequence=getattr(px.colors.qualitative, {repr(color_scheme)})
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                """)
+
+
+            if chart_type == "Density Chart":
+                # Column selection
+                x_column = st.selectbox("Select the x-axis column", df.columns.tolist())
+                y_column = st.selectbox("Select the y-axis column", df.columns.tolist())
+                category_column = st.selectbox("Select the category column (for color-coding)", df.columns.tolist())
+
+                # Plot customization
+                color_scheme = st.selectbox("Select color scheme", ["Plotly", "D3", "G10", "T10", "Alphabet"])
+
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    fig = px.density_contour(
+                        {data[1:-1] if data.startswith("'") and data.endswith("'") else data},
+                        x={repr(x_column)},
+                        y={repr(y_column)},
+                        color={repr(category_column)},
+                        title="Density Contour Plot Example",
+                        color_discrete_sequence=getattr(px.colors.qualitative, {repr(color_scheme)})
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
                     """)
+
+
+            if chart_type == "Gauge Chart":
+                # Column selection
+                value_column = st.selectbox("Select the column for gauge value", df.columns.tolist())
+                reference_column = st.selectbox("Select the column for reference value (optional)", ["None"] + df.columns.tolist())
+                
+                # Gauge customization
+                  # or let the user input it
+                if value_column:
+
+                    max_value = st.number_input("Enter the maximum value for the gauge", value=float(df[value_column].max()))
+
+                    if st.session_state.agg_event:
+                        data = 'agg_data'
+                    else:
+                        data = 'df'
+
+                    st.session_state.chart_code = textwrap.dedent(f"""
+                        gauge_value = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(value_column)}].iloc[-1]
+
+                        reference_value = None
+                        if {repr(reference_column)} != "None":
+                            reference_value = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(reference_column)}].iloc[-1]
+
+                        fig = go.Figure(go.Indicator(
+                            mode="gauge+number+delta" if reference_value else "gauge+number",
+                            value=gauge_value,
+                            delta={{'reference': reference_value}} if reference_value else None,
+                            gauge={{'axis': {{'range': [None, {max_value}]}}}},
+                            
+                        ))
+
+                        st.plotly_chart(fig, use_container_width=True)
+                        """)
+
+
+            if chart_type == "KPI Card":
+
+                # Get list of numeric columns for value and delta
+                numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+                
+                # Get list of all columns for label
+                all_columns = df.columns.tolist()
+
+                # User inputs
+                label_column = st.selectbox("KPI label:", all_columns)
+                value_column = st.selectbox("current KPI value:", numeric_columns)
+                delta_column = st.selectbox("KPI change (delta):", ["None"] + numeric_columns)
+                
+                # Optional configurations
+                delta_color = st.selectbox("delta color:", ["normal", "inverse", "off"])
+                label_visibility = st.selectbox("label visibility?", ["visible", "hidden", "collapsed"])
+                border = st.checkbox("border around the metric?")
+
+                if st.session_state.agg_event:
+                    data = 'agg_data'
+                else:
+                    data = 'df'
+
+                st.session_state.chart_code = textwrap.dedent(f"""
+                    # Get the latest values from the selected columns
+                    label = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(label_column)}].iloc[-1]
+                    value = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(value_column)}].iloc[-1]
+                    delta = {data[1:-1] if data.startswith("'") and data.endswith("'") else data}[{repr(delta_column)}].iloc[-1] if {repr(delta_column)} != "None" else None
+
+                    st.metric(
+                        label=label,
+                        value=value,
+                        delta=delta,
+                        delta_color={repr(delta_color)},
+                        label_visibility={repr(label_visibility)},
+                        border={repr(border)}
+                    )
+                    """)
+
+
+
+            if chart_type == "Text":
+
+                # Text input
+                user_text = st.text_input("Enter your text:")
+
+                # Font size selection
+                font_size = st.slider("Select font size:", 10, 30, 16)
+
+                # Text style selection
+                bold = st.checkbox("Bold")
+                italic = st.checkbox("Italic")
+
+                # Hyperlink option
+                add_link = st.checkbox("Add a hyperlink")
+
+                if add_link:
+                    link_text = st.text_input("Enter the text to be linked:")
+                    link_url = st.text_input("Enter the URL:")
+                    if not link_url.startswith(('http://', 'https://')):
+                        link_url = 'https://' + link_url
 
                 # Display the styled text
-                st.markdown(f"<p style='{style}'>{user_text}</p>", unsafe_allow_html=True)
+                if user_text:
+                    style = f"font-size: {font_size}px;"
+                    if bold:
+                        style += " font-weight: bold;"
+                    if italic:
+                        style += " font-style: italic;"
+                    
+                    if add_link and link_text and link_url:
+                        user_text = user_text.replace(link_text, f"<a href='{link_url}'>{link_text}</a>")
+                    
+                    st.session_state.chart_code = textwrap.dedent(f"""
+                        st.markdown(f"<p style='{style}'>{user_text}</p>", unsafe_allow_html=True)
+                        """)
+
+                    # Display the styled text
+                    st.markdown(f"<p style='{style}'>{user_text}</p>", unsafe_allow_html=True)
 
 
-        if chart_type == "Image":
+            if chart_type == "Image":
 
-            # Image link input
-            image_link = st.text_input("Enter image URL:")
+                # Image link input
+                image_link = st.text_input("Enter image URL:")
 
-            if image_link:
-                # Image width slider
-                image_width = st.slider("Adjust image width:", 100, 800, 400)
-                
-                # Display the image with adjusted width
-                st.session_state.chart_code = textwrap.dedent(f"""
-                    st.image("{image_link}", width={image_width})
-                    """)
+                if image_link:
+                    # Image width slider
+                    image_width = st.slider("Adjust image width:", 100, 800, 400)
+                    
+                    # Display the image with adjusted width
+                    st.session_state.chart_code = textwrap.dedent(f"""
+                        st.image("{image_link}", width={image_width})
+                        """)
 
 
-        if chart_type == "Video":
+            if chart_type == "Video":
 
-            # Video link input
-            video_link = st.text_input("Enter YouTube video URL:")
-            if video_link:
-                st.session_state.chart_code = textwrap.dedent(f"""
-                    st.video("{video_link}")
-                    """)
+                # Video link input
+                video_link = st.text_input("Enter YouTube video URL:")
+                if video_link:
+                    st.session_state.chart_code = textwrap.dedent(f"""
+                        st.video("{video_link}")
+                        """)
 
 
     # Ask for chart title and axis labels
@@ -2345,6 +2346,8 @@ def dashboard():
 
 
     with st.sidebar:
+
+
         df = st.session_state.selected_df
         st.write("Dashboard Filters")
          
@@ -2357,6 +2360,8 @@ def dashboard():
                 col1, col2, col3 = st.columns([2,2,1])
                 
                 with col1:
+                    st.markdown('<style>div.stSelectbox > div {width: 100%;}</style>', unsafe_allow_html=True)
+
                     filter['column'] = st.selectbox("Select Column", df.columns, key=f"col_{i}")
                 
                 with col2:
