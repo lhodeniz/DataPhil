@@ -2700,13 +2700,15 @@ else:
 
 
     # header
-    st.markdown("<h2 style='text-align: center;'>Welcome to DataPhil!👋</h2>",
-            unsafe_allow_html=True)
-    st.markdown("<h6 style='text-align: center;'>Your Data, Your Way—Fast & Easy!💩</h6>", 
-            unsafe_allow_html=True)
 
+    with st.container(key = "logo"):
+        st.image("img/dataphil_logo.png", width=150)
+
+    st.markdown("<h6 style='text-align: center;'>DataPhil: Your Data, Your Way</h6>", 
+            unsafe_allow_html=True)
     # sections
-    section_selection = st.pills("", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Import/Export", "Report", "Dashboard"])
+    with st.container(key = "sections"):
+        section_selection = st.pills("", ["Upload Dataset", "Summary", "Fix Dataset", "New Columns", "Import/Export", "Report", "Dashboard"])
     # Display content based on sidebar selection
     if section_selection == "Upload Dataset":
         upload_dataset()

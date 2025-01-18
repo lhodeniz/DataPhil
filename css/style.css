@@ -1,3 +1,18 @@
+/* Logo */
+
+.st-key-logo div[data-testid="stFullScreenFrame"]{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+/* sections */
+.st-key-sections div[data-testid="stButtonGroup"]{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+}
 /* Fix Dataset */
 
 /* Convert Data Types */
