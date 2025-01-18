@@ -974,20 +974,35 @@ def fix():
         if st.button("Search"):
             if search_term:
                 if use_wildcard:
-
                     # Convert wildcard pattern to regex
-                    search_pattern = search_term.replace("*", ".*").replace("?", ".")
+                    search_pattern = search_term.strip().replace("*", ".*").replace("?", ".")
                     regex = re.compile(f"^{search_pattern}$", re.IGNORECASE)
-                    filtered_df = st.session_state.df[st.session_state.df[search_column].astype(str).apply(lambda x: bool(regex.match(x)))]
+                    filtered_df = st.session_state.df[
+                        st.session_state.df[search_column].apply(
+                            lambda x: bool(regex.match(str(x)))  # Ensure all values are treated as strings
+                        )
+                    ]
                 else:
-                    # Exact match search
-                    filtered_df = st.session_state.df[st.session_state.df[search_column].astype(str).eq(search_term)]
+                    # Exact match search with normalization
+                    def normalize(value):
+                        try:
+                            # Try converting to float and compare with the search term as float
+                            return float(value) == float(search_term)
+                        except ValueError:
+                            # Fallback to string comparison if conversion fails
+                            return str(value) == search_term
+                    
+                    filtered_df = st.session_state.df[
+                        st.session_state.df[search_column].apply(normalize)
+                    ]
                 
                 st.session_state.search_results = filtered_df.index.tolist()
                 st.session_state.current_index = 0
                 st.rerun()
             else:
                 st.warning("Please enter a search term")
+
+
 
         # Display and edit results one by one
         if st.session_state.search_results:
@@ -1007,9 +1022,26 @@ def fix():
 
             with col2:
                 if st.button("Save Changes", use_container_width=True):
-                    st.session_state.df.loc[current_row_index] = edited_row.iloc[0]
+                    # Retrieve the edited row
+                    edited_value = edited_row.iloc[0, :]
+                    
+                    # Enforce float conversion for numeric columns
+                    if pd.api.types.is_numeric_dtype(st.session_state.df[search_column]):
+                        try:
+                            # Convert to float and add `.0` if it's an integer
+                            edited_value = edited_value.apply(
+                                lambda x: float(x) if isinstance(x, (int, str)) and str(x).isdigit() else x
+                            )
+                        except ValueError:
+                            st.warning("Invalid input: Unable to convert to float.")
+                            st.stop()
+                    
+                    # Update the dataframe with the modified value
+                    st.session_state.df.loc[current_row_index] = edited_value
                     st.success("Changes saved to the original dataset")
                     st.rerun()
+
+
 
             with col3:
                 if st.button("Next", use_container_width=True) and st.session_state.current_index < len(st.session_state.search_results) - 1:
