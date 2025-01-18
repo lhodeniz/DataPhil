@@ -110,3 +110,7 @@
 .st-key-gui_elements div[data-baseweb="slider"] {
     width: 20%;
 }
+
+.st-key-dashboard_adjustments div[data-baseweb="slider"]{
+	width: 20%;
+}

@@ -465,19 +465,21 @@ def adjust_dashboard_layout():
     num_cols = st.session_state.layout.get("cols", 2)
 
     layout_widths = []
-    for row_index in range(num_rows):
-        st.write(f"Row {row_index + 1} column widths:")
-        row_widths = []
-        cols = st.columns(num_cols)  # Create a row of columns
-        for col_index, col in enumerate(cols):
-            with col:
-                col_width = st.slider(
-                    f"Col {col_index + 1}",
-                    min_value=0, max_value=100, value=50, step=5,
-                    key=f"slider_{row_index}_{col_index}"
-                )
-            row_widths.append(col_width)
-        layout_widths.append(row_widths)
+    with st.container(key = "dashboard_adjustments"):
+        #
+        for row_index in range(num_rows):
+            st.write(f"Row {row_index + 1} column widths:")
+            row_widths = []
+            cols = st.columns(num_cols)  # Create a row of columns
+            for col_index, col in enumerate(cols):
+                with col:
+                    col_width = st.slider(
+                        f"Col {col_index + 1}",
+                        min_value=0, max_value=100, value=50, step=5,
+                        key=f"slider_{row_index}_{col_index}"
+                    )
+                row_widths.append(col_width)
+            layout_widths.append(row_widths)
 
     # Save the column widths in session state
     st.session_state.column_widths = layout_widths
