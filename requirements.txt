@@ -12,3 +12,4 @@ geopy
 seaborn
 matplotlib
 boto3
+streamlit-ace
