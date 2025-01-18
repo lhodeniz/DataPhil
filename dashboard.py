@@ -29,6 +29,7 @@ import uuid
 import hashlib
 import time
 import re
+from streamlit_ace import st_ace
 
 
 ##########    page config   ############
@@ -1032,7 +1033,20 @@ def new_columns():
             # Add/Edit function
             st.subheader("Add/Edit Function")
             st.text_input("Function Name", key="function_name")
-            st.text_area("Function Code", key="function_code")
+            function_code = st_ace(
+                placeholder="Write your Python function here",
+                language="python",
+                theme="monokai",
+                keybinding="vscode",
+                font_size=14,
+                tab_size=4,
+                show_gutter=True,
+                show_print_margin=False,
+                wrap=False,
+                auto_update=True,
+                key="function_code"
+            )
+
             st.button("Save Function", on_click=add_or_update_function)
             
             # Remove function
