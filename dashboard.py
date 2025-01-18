@@ -1275,13 +1275,16 @@ def export():
             st.subheader("Cloud")
            
             # Initialize the S3 client
-            s3 = boto3.client(
-                's3',
-                aws_access_key_id='AKIAQUFLQN6S3NYTLU7Q',
-                aws_secret_access_key='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',
-                region_name='ap-southeast-2'
-            )
+            @st.cache_resource
+            def get_s3_client():
+                return boto3.client(
+                    's3',
+                    aws_access_key_id='AKIAQUFLQN6S3NYTLU7Q',
+                    aws_secret_access_key='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',
+                    region_name='ap-southeast-2'
+                )
 
+            s3 = get_s3_client()
 
             bucket_name = 'dataphil-bucket'
 
@@ -1293,17 +1296,25 @@ def export():
                 try:
                     unique_filename = f"dashboard_{uuid.uuid4().hex}.json"
                     file_obj = io.BytesIO(data.encode('utf-8'))
+                    file_size = file_obj.getbuffer().nbytes
                     
                     # Create a progress bar
                     progress_bar = st.progress(0)
                     
-                    # Simulate upload progress
-                    for percent_complete in range(100):
-                        time.sleep(0.01)  # Simulate some work being done
-                        progress_bar.progress(percent_complete + 1)
+                    # Implement multipart upload
+                    mpu = s3.create_multipart_upload(Bucket=bucket_name, Key=unique_filename)
                     
-                    # Actual upload
-                    s3.upload_fileobj(file_obj, bucket_name, unique_filename)
+                    parts = []
+                    uploaded_bytes = 0
+                    part_size = 5 * 1024 * 1024  # 5MB chunks
+                    
+                    for i, chunk in enumerate(iter(lambda: file_obj.read(part_size), b'')):
+                        part = s3.upload_part(Body=chunk, Bucket=bucket_name, Key=unique_filename, PartNumber=i+1, UploadId=mpu['UploadId'])
+                        parts.append({"PartNumber": i+1, "ETag": part['ETag']})
+                        uploaded_bytes += len(chunk)
+                        progress_bar.progress(min(uploaded_bytes / file_size, 1.0))
+                    
+                    s3.complete_multipart_upload(Bucket=bucket_name, Key=unique_filename, UploadId=mpu['UploadId'], MultipartUpload={"Parts": parts})
                     
                     file_url = f"https://{bucket_name}.s3.ap-southeast-2.amazonaws.com/{unique_filename}"
                     return unique_filename
@@ -1345,20 +1356,29 @@ def export():
 
 
 
-
             def download_file_from_s3(bucket_name, file_name):
                 try:
-                    # Create an in-memory bytes buffer
-                    file_obj = io.BytesIO()
+                    # Get file metadata
+                    response = s3.head_object(Bucket=bucket_name, Key=file_name)
+                    file_size = response['ContentLength']
                     
-                    # Download the file into the buffer
-                    s3.download_fileobj(bucket_name, file_name, file_obj)
+                    # Create a progress bar
+                    progress_bar = st.progress(0)
                     
-                    # Reset the file pointer to the beginning
-                    file_obj.seek(0)
+                    # Stream the file
+                    streamed_body = s3.get_object(Bucket=bucket_name, Key=file_name)['Body']
                     
-                    # Return the in-memory object
-                    return file_obj
+                    chunk_size = 1024 * 1024  # 1MB chunks
+                    downloaded_bytes = 0
+                    file_content = io.BytesIO()
+                    
+                    for chunk in streamed_body.iter_chunks(chunk_size=chunk_size):
+                        file_content.write(chunk)
+                        downloaded_bytes += len(chunk)
+                        progress_bar.progress(min(downloaded_bytes / file_size, 1.0))
+                    
+                    file_content.seek(0)
+                    return file_content
                 except Exception as e:
                     return f"Error: {e}"
 
