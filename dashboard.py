@@ -1237,36 +1237,39 @@ def export():
             # Ensure the dataframe is not empty
             df_name = st.session_state.df_name
             
+
             @st.cache_data
-            def convert_df_to_csv(df):
-                return df.to_csv(index=False).encode('utf-8')
+            def load_and_prepare_data(df):
+                csv_data = df.to_csv(index=False).encode('utf-8')
+                return csv_data
 
+            @st.cache_data
+            def prepare_dashboard_json():
+                return export_settings()
 
-            if 'df' in st.session_state and not st.session_state.df.empty:
+            # Prepare data once and store in session state
+            if 'prepared_csv_data' not in st.session_state and 'df' in st.session_state and not st.session_state.df.empty:
+                with st.spinner('Preparing data for download...'):
+                    st.session_state.prepared_csv_data = load_and_prepare_data(st.session_state.df)
+                    st.session_state.prepared_json_data = prepare_dashboard_json()
 
+            # Display download buttons if data is prepared
+            if 'prepared_csv_data' in st.session_state:
                 dataset_file_name = df_name.rsplit(".", 1)[0] + "_updated.csv"
-                csv_data = convert_df_to_csv(st.session_state.df)
-                
                 st.download_button(
                     label="Download Dataset",
-                    data=csv_data,
+                    data=st.session_state.prepared_csv_data,
                     file_name=dataset_file_name,
                     mime="text/csv"
                 )
-            
-            # JSON dashboard download
-            if 'df' in st.session_state and not st.session_state.df.empty:
-                
-                dashboard_file_name = df_name.rsplit(".", 1)[0] + "_dashboard.json"
-                settings_json = export_settings()
 
+                dashboard_file_name = df_name.rsplit(".", 1)[0] + "_dashboard.json"
                 st.download_button(
                     label="Download Dashboard",
-                    data=settings_json,
+                    data=st.session_state.prepared_json_data,
                     file_name=dashboard_file_name,
                     mime="application/json"
                 )
-
 
     with col2:
 
