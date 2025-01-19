@@ -105,6 +105,8 @@ if 'chart_code' not in st.session_state:
 if 'column_widths' not in st.session_state:
     column_widths = []
 
+if 'df_name' not in st.session_state:
+    st.session_state.df_name = ''
 
 ############# CSS ####################
 
@@ -588,6 +590,11 @@ def upload_dataset():
                 st.write(st.session_state.df.head())
             else:
                 st.info("Please upload a dataset to proceed.")
+
+        if st.session_state.uploaded_file:
+
+            df_name = uploaded_file.name
+            st.session_state.df_name = df_name
 
 
     with tab2:
@@ -1228,21 +1235,16 @@ def export():
 
 
             # Ensure the dataframe is not empty
-
+            df_name = st.session_state.df_name
+            
             @st.cache_data
             def convert_df_to_csv(df):
                 return df.to_csv(index=False).encode('utf-8')
 
-            @st.cache_data
-            def generate_file_name(uploaded_file, suffix):
-                if uploaded_file:
-                    file_name = uploaded_file.rsplit(".", 1)[0] + suffix
-                    return file_name
-                return "default_file" + suffix
 
             if 'df' in st.session_state and not st.session_state.df.empty:
-                uploaded_file = st.session_state.get('uploaded_file', "uploaded_file.csv")
-                dataset_file_name = generate_file_name(uploaded_file, "_updated.csv")
+
+                dataset_file_name = df_name.rsplit(".", 1)[0] + "_updated.csv"
                 csv_data = convert_df_to_csv(st.session_state.df)
                 
                 st.download_button(
@@ -1253,11 +1255,11 @@ def export():
                 )
             
             # JSON dashboard download
-            if st.button("Download Dashboard"):
-                uploaded_file = st.session_state.get('uploaded_file', "uploaded_file.csv")
-                dashboard_file_name = generate_file_name(uploaded_file, "_dashboard.json")
-                settings_json = export_settings()
+            if 'df' in st.session_state and not st.session_state.df.empty:
                 
+                dashboard_file_name = df_name.rsplit(".", 1)[0] + "_dashboard.json"
+                settings_json = export_settings()
+
                 st.download_button(
                     label="Download Dashboard",
                     data=settings_json,
