@@ -1234,38 +1234,36 @@ def export():
                 return df.to_csv(index=False).encode('utf-8')
 
             @st.cache_data
-            def generate_file_name(uploaded_file):
+            def generate_file_name(uploaded_file, suffix):
                 if uploaded_file:
-                    file_name = "updated_" + uploaded_file
-                    return file_name.replace(".csv", "_updated.csv")
-                return "updated_dataset.csv"
+                    file_name = uploaded_file.rsplit(".", 1)[0] + suffix
+                    return file_name
+                return "default_file" + suffix
 
             if 'df' in st.session_state and not st.session_state.df.empty:
-                uploaded_file = st.session_state.get('uploaded_file')
-                file_name = generate_file_name(uploaded_file)
-
+                uploaded_file = st.session_state.get('uploaded_file', "uploaded_file.csv")
+                dataset_file_name = generate_file_name(uploaded_file, "_updated.csv")
                 csv_data = convert_df_to_csv(st.session_state.df)
-
-                st.markdown("<br>", unsafe_allow_html=True)
+                
                 st.download_button(
                     label="Download Dataset",
                     data=csv_data,
-                    file_name=file_name,
+                    file_name=dataset_file_name,
                     mime="text/csv"
                 )
-            else:
-                st.error("No dataset available for export. Please upload or create a dataset first.")
-
-            # Export settings functionality
-            if st.button('Download dashboard'):
-                settings_json = export_settings()  
+            
+            # JSON dashboard download
+            if st.button("Download Dashboard"):
+                uploaded_file = st.session_state.get('uploaded_file', "uploaded_file.csv")
+                dashboard_file_name = generate_file_name(uploaded_file, "_dashboard.json")
+                settings_json = export_settings()
+                
                 st.download_button(
-                    label="Download Settings",
+                    label="Download Dashboard",
                     data=settings_json,
-                    file_name="app_settings.json",
+                    file_name=dashboard_file_name,
                     mime="application/json"
                 )
-
 
 
     with col2:
