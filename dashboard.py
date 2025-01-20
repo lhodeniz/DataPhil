@@ -1598,7 +1598,7 @@ def report():
         if 'filter_conditions' not in st.session_state:
             st.session_state.filter_conditions = []
         
-        col1, col2, col3, col4, col5 = st.columns(5)
+        col1, col2, col3, col4, col5 = st.columns(5, vertical_alignment = "bottom")
         with col1:
             column = st.selectbox("Select column:", df.columns, key="filter_column")
         with col2:
