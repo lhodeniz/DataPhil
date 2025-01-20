@@ -1533,7 +1533,7 @@ def report():
             st.session_state.agg_list = []
 
         # Let user add multiple aggregations
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3 = st.columns(3, vertical_alignment = "bottom")
         with col1:
             agg_column = st.selectbox("Select column:", st.session_state.df.columns)
         with col2:
