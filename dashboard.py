@@ -1364,7 +1364,6 @@ def export():
                         st.info("No changes detected in the dataset. File upload skipped.")
 
 
-            @st.cache_data
 
             def download_file_from_s3(bucket_name, file_name):
                 try:
