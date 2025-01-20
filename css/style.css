@@ -90,27 +90,27 @@
 }
 
 .st-key-chart_title div[data-testid="stTextInputRootElement"]{
-	width: 30%;
+	width: 100%;
 
 }
 
 .st-key-select_cell div[data-baseweb="select"]{
-	width: 10%;
+	width: 25%;
 
 }
 
 /* GUI */
 
 .st-key-aggregate_columns div[data-baseweb="select"]{
-	width: 40%;
+	width: 80%;
 }
 
 .st-key-agg_column div[data-baseweb="select"] {
-	width: 40%;
+	width: 70%;
 }
 
 .st-key-agg_function div[data-baseweb="select"]{
-	width: 50%;
+	width: 70%;
 }
 
 .st-key-gui_chart div[data-baseweb="select"]{
@@ -123,9 +123,14 @@
 .st-key-gui_elements div.stNumberInput > div,
 .st-key-gui_elements div[data-baseweb="select"],
 .st-key-gui_elements div[data-baseweb="slider"] {
-    width: 20%;
+    width: 40%;
 }
 
 .st-key-dashboard_adjustments div[data-baseweb="slider"]{
 	width: 20%;
+}
+
+div[data-testid="stExpander"]{
+	background-color: darkcyan;
+	width: 100%;
 }
