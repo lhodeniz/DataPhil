@@ -116,6 +116,7 @@ with open("css/style.css") as f:
 
 ###########    FUNCTIONS   #################
 
+
 def add_or_update_function():
     func_name = st.session_state.function_name
     func_code = st.session_state.function_code
@@ -1277,9 +1278,11 @@ def export():
 
         with st.container(border = True):
 
+
             st.subheader("Cloud")
            
             # Initialize the S3 client
+            
             @st.cache_resource
             def get_s3_client():
                 return boto3.client(
@@ -1361,6 +1364,7 @@ def export():
                         st.info("No changes detected in the dataset. File upload skipped.")
 
 
+            @st.cache_data
 
             def download_file_from_s3(bucket_name, file_name):
                 try:
