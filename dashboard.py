@@ -1263,13 +1263,15 @@ def export():
                     mime="text/csv"
                 )
 
-                dashboard_file_name = df_name.rsplit(".", 1)[0] + "_dashboard.json"
-                st.download_button(
-                    label="Download Dashboard",
-                    data=st.session_state.prepared_json_data,
-                    file_name=dashboard_file_name,
-                    mime="application/json"
-                )
+                if st.session_state.charts:
+
+                    dashboard_file_name = df_name.rsplit(".", 1)[0] + "_dashboard.json"
+                    st.download_button(
+                        label="Download Dashboard",
+                        data=st.session_state.prepared_json_data,
+                        file_name=dashboard_file_name,
+                        mime="application/json"
+                    )
 
     with col2:
 
@@ -1333,29 +1335,30 @@ def export():
                     st.session_state.layout, st.session_state.charts
                 )
 
+            if st.session_state.charts:
 
-            if st.button("Upload dashboard"):
-                current_hash = calculate_df_hash(st.session_state.df)
-                current_dashboard_hash = calculate_dashboard_hash(
-                    st.session_state.layout, st.session_state.charts
-                )
+                if st.button("Upload dashboard"):
+                    current_hash = calculate_df_hash(st.session_state.df)
+                    current_dashboard_hash = calculate_dashboard_hash(
+                        st.session_state.layout, st.session_state.charts
+                    )
 
-                if current_hash != st.session_state.df_hash or current_dashboard_hash != st.session_state.dashboard_hash:
-                    with st.spinner('Uploading...'):
-                        result = upload_file_to_s3(settings_json, bucket_name)
-                    result = result.replace('.json', '')
+                    if current_hash != st.session_state.df_hash or current_dashboard_hash != st.session_state.dashboard_hash:
+                        with st.spinner('Uploading...'):
+                            result = upload_file_to_s3(settings_json, bucket_name)
+                        result = result.replace('.json', '')
 
-                    # Update hashes after successful upload
-                    if "Error" not in result:
-                        st.session_state.df_hash = current_hash
-                        st.session_state.dashboard_hash = current_dashboard_hash
-                        st.success("File uploaded successfully!")
+                        # Update hashes after successful upload
+                        if "Error" not in result:
+                            st.session_state.df_hash = current_hash
+                            st.session_state.dashboard_hash = current_dashboard_hash
+                            st.success("File uploaded successfully!")
 
-                        st.write("Your dashboard code:", result)
+                            st.write("Your dashboard code:", result)
+                        else:
+                            st.error(f"An error occurred: {result}")
                     else:
-                        st.error(f"An error occurred: {result}")
-                else:
-                    st.info("No changes detected in the dataset. File upload skipped.")
+                        st.info("No changes detected in the dataset. File upload skipped.")
 
 
 
