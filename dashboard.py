@@ -1731,25 +1731,30 @@ def aggregate():
 def dashboard_tab():
 
 
+    col1, col2 = st.columns(2, vertical_alignment="center")
 
-    # Check for saved results
-    st.session_state.tb = st.session_state.get('tb', {})
-    tb = pd.DataFrame(st.session_state.tb.items(), columns=['Key', 'Value'])
 
-    st.session_state.custom_title = st.text_input("Enter dashboard title:", "Dashboard", key = "tui_title")
+    with col1:
+        # Check for saved results
+        st.session_state.tb = st.session_state.get('tb', {})
+        tb = pd.DataFrame(st.session_state.tb.items(), columns=['Key', 'Value'])
 
-    with st.container(border = True):
-        # Let the user define the dashboard layout
-        rows = st.number_input("Number of rows", min_value=1, max_value = 10, value=2, key = "dash_row")
-        cols = st.number_input("Number of columns", min_value=1, max_value = 10, value=2, key= "dash_col")
+        st.session_state.custom_title = st.text_input("Enter dashboard title:", "Dashboard", key = "tui_title")
 
-    # Create a list of cell positions
-    cell_positions = [f"{i+1}-{j+1}" for i in range(rows) for j in range(cols)]
+    with col2:
+        #
+        with st.container(border = True):
+            # Let the user define the dashboard layout
+            rows = st.number_input("Number of rows", min_value=1, max_value = 10, value=2, key = "dash_row")
+            cols = st.number_input("Number of columns", min_value=1, max_value = 10, value=2, key= "dash_col")
 
-    # Store the layout in session state
-    if "layout" not in st.session_state or st.session_state.layout != {"rows": rows, "cols": cols, "cells": cell_positions}:
-        st.session_state.layout = {"rows": rows, "cols": cols, "cells": cell_positions}
-        st.session_state.charts = {}  # Reset charts on layout change
+        # Create a list of cell positions
+        cell_positions = [f"{i+1}-{j+1}" for i in range(rows) for j in range(cols)]
+
+        # Store the layout in session state
+        if "layout" not in st.session_state or st.session_state.layout != {"rows": rows, "cols": cols, "cells": cell_positions}:
+            st.session_state.layout = {"rows": rows, "cols": cols, "cells": cell_positions}
+            st.session_state.charts = {}  # Reset charts on layout change
 
     df = st.session_state.df
     st.dataframe(df.head(5))
