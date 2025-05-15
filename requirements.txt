@@ -13,4 +13,4 @@ seaborn
 matplotlib
 boto3
 streamlit-ace
-streamlit==1.19.0
+streamlit
