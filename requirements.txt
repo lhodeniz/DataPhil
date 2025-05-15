@@ -1,6 +1,6 @@
 pygwalker==0.4.9.13
 plotly
-altair
+altair<5
 wordcloud
 xlrd>=2.0.1
 openpyxl>=3.0.0
